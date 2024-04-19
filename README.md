@@ -37,8 +37,7 @@ Deployment Steps –
   
 10.	Deploy the metadata sync and custom Function app by configuring the Azure Function to pull from your forked GH repo or by cloning the repo and doing a publish.
 11.	Create the AI Search Index, Custom Skill and Indexer definitions (in that order) using the three JSON configuration files in the search-config folder of the Repo
-12.	Publish the Web application from the Web folder (TODO)
-13.	Upload documents to the Blob Storage Container created in #3 and ensure the Indexer is running.
+12.	Upload documents to the Blob Storage Container created in #3 and ensure the Indexer is running.
 
 ## Contributing
 
