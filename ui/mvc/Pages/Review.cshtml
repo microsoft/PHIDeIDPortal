@@ -1,0 +1,64 @@
+﻿@page
+@model ReviewModel
+@{
+    ViewData["Title"] = "Review";
+    int i = 0;
+
+    if (Model.IsAuthorized)
+    {
+        <table id="tblDocs" class="table">
+            <thead>
+                <tr>
+                    <th nowrap>Document</th>
+                    <th>Author</th>
+                    <!--<th>Content</th>-->
+                    <th nowrap>Redacted Content</th>
+                    <th nowrap>Metadata</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (SearchResult<SearchDocument> result in Model.DocumentSearchResults)
+                {
+                    var piiHover = (((String)result.Document["piiEntities"]) == "[]") ?
+                    "<div class='piiHover containsNoPii bg-success'>This document does not contain PII/PHI identified content.</div>" :
+                    "<div class='piiHover containsPii bg-danger'>This document contains PII/PHI identified content. Click to view more...</div>";
+
+                    var redactedSummary = ((String)result.Document["redactedContent"]).Length > 512 ? ((String)result.Document["redactedContent"]).Substring(0, 511) + "..." : result.Document["redactedContent"];
+
+                    <tr class="@(i % 2 == 0 ? "row-even" : "row-odd")">
+                        <td style="vertical-align: top;">@result.Document["metadata_storage_name"]</td>
+                        <td style="vertical-align: top;">@result.Document["author"].ToString().Split('@')[0]</td>
+                        <!-- <td style="vertical-align: top;">@result.Document["content"]</td> -->
+                        <td style="vertical-align: top;" class="redacted-content-td tagged">
+                            <div class="content">@redactedSummary @Html.Raw(piiHover)<div class="piiDetails">@result.Document["piiEntities"]</div></div>
+                            <div style="padding: 0 !important; margin-top: 8px;" class="row">
+                                <div class='col-sm-7'><input class="form-control" type="text" placeholder="No justification provided." readonly></input></div>
+                                <div class='col-sm-5'>
+                                    <button class="btn btn-secondary" type="button"><i class="bi bi-download"></i> Download</button>
+                                    <button class="btn btn-success" type="button"><i class="bi bi-check-lg"></i> Approve</button>
+                                    <button class="btn btn-danger" type="button"><i class="bi bi-x-lg"></i> Deny</button>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="vertical-align: top;">
+                            @{
+                                var metadataTags = (object[])result.Document["organizationalMetadata"];
+                            }
+                            @foreach (var tag in metadataTags)
+                            {
+                                @Html.Raw($"<div class='tagCloudElem'><span>{tag}</span></div>")
+                            }
+                        </td>
+                    </tr>
+
+                    i++;
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="unauth text-danger bs-danger-bg-subtle"><i class="bi bi-shield-fill-exclamation"></i> You are unauthorized to view this page.</div>
+    }
+}
+

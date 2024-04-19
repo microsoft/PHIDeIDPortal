@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "custom_skills": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7267",
+      "launchBrowser": false
+    }
+  }
+}

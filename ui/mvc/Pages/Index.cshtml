@@ -1,0 +1,35 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "All Documents";
+    int i = 0;
+}
+
+<table id="tblDocs" class="table">
+    <thead>
+        <tr>
+            <th nowrap>Document</th>
+            <th>Author</th>
+            <th>Last Modified</th>
+            <th nowrap>Metadata</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var result in Model.CosmosResults)
+        {
+            <tr class="@(i % 2 == 0 ? "row-even" : "row-odd")">
+                <td style="vertical-align: top;">@result.FileName</td>
+                <td style="vertical-align: top;">@result.Author.ToString().Split('@')[0]</td>
+                <td style="vertical-align: top;"></td>
+                <td style="vertical-align: top;">
+                    @foreach (var tag in result.OrganizationalMetadata)
+                    {
+                        @Html.Raw($"<div class='tagCloudElem'><span>{tag}</span></div>")
+                    }
+                </td>
+            </tr>
+
+            i++;
+        }
+    </tbody>
+</table>
