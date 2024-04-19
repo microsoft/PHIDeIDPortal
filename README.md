@@ -7,37 +7,37 @@ Installation Instructions
 ![318910463-a3d9905d-6df7-4e2d-b0eb-d0c4e7e2ecb5](https://github.com/microsoft/PHIDeIDPortal/assets/112185610/1f74e6b9-0f94-40db-9fa8-aadd04433d24)
  
 Deployment Steps –
-1.	Clone or Fork repo
-2.	Create a new Storage Account
-  a.	**az storage account create** -n _storageaccount_ -g _resourcegroup_ --sku Standard_LRS
+1. Clone or Fork repo  
+2. Create a new Storage Account  
+  a. **az storage account create** -n _storageaccount_ -g _resourcegroup_ --sku Standard_LRS
   
-3.	Create a Storage Account container for document uploads
-  a.	**az storage container create** -n _container_ --account-name _storageaccount_
+3. Create a Storage Account container for document uploads  
+  a. **az storage container create** -n _container_ --account-name _storageaccount_  
   
-4.	Create a new Azure AI multi-service resource
-  a.	**az cognitiveservices account create** –name _aiservice_ --resource-group _resourcegroup_ --kind CognitiveServices --sku Standard --yes
+4. Create a new Azure AI multi-service resource  
+  a. **az cognitiveservices account create** –name _aiservice_ --resource-group _resourcegroup_ --kind CognitiveServices --sku Standard --yes  
   
-5.	Create a new Azure AI Search instance
-  a.	**az search service create** --name _searchservice_ --resource-group _resourcegroup_ –sku standard
+5. Create a new Azure AI Search instance  
+  a. **az search service create** --name _searchservice_ --resource-group _resourcegroup_ –sku standard  
   
-6.	Create two new App Service Plans – one for the Web application and one for standard Functions
-  a.	**az appservice plan create** -g _resourcegroup_ -n _plan1_ --sku S1
-  b.	**az appservice plan create** -g _resourcegroup_ -n _plan2_ --sku S1
+6. Create two new App Service Plans – one for the Web application and one for standard Functions  
+  a. **az appservice plan create** -g _resourcegroup_ -n _plan1_ --sku S1  
+  b. **az appservice plan create** -g _resourcegroup_ -n _plan2_ --sku S1  
   
-8.	Create a new Azure Function instance for the metadata sync and custom skill
-  a.	**az functionapp create** --name functionapp --os-type Windows --resource-group _resourcegroup_ --runtime dotnet --storage-account _storageaccount_ --plan _plan1_
-  b. Publish the Azure Function to the Function App Service
+8. Create a new Azure Function instance for the metadata sync and custom skill  
+  a. **az functionapp create** --name functionapp --os-type Windows --resource-group _resourcegroup_ --runtime dotnet --storage-account _storageaccount_ --plan _plan1_  
+  b. Publish the Azure Function to the Function App Service    
 
-9.	Create the Web application for the DeID Web Portal
-  a. az resource update --resource-group resourcegroup --name scm --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --parent sites/{appname} --set properties.allow=true
-  b. Publish the Web solution to the Web App Service
-  c. az webapp identity assign -g resourcegroup -n appname
-  d. az role assignment create --assignee systemassignedidentityguid --role "Storage Blob Data Contributor" --scope storageaccountid
-  e. az ad app create --display-name DeIdWeb --web-redirect-uris https://{appName}.azurewebsites.net/signin-oidc
+9. Create the Web application for the DeID Web Portal  
+  a. az resource update --resource-group resourcegroup --name scm --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --parent sites/{appname} --set properties.allow=true  
+  b. Publish the Web solution to the Web App Service  
+  c. az webapp identity assign -g resourcegroup -n appname  
+  d. az role assignment create --assignee systemassignedidentityguid --role "Storage Blob Data Contributor" --scope storageaccountid  
+  e. az ad app create --display-name DeIdWeb --web-redirect-uris https://{appName}.azurewebsites.net/signin-oidc  
 
-10.  Create the Cosmos NoSQL database
-	a. az cosmosdb create --name _cosmosdb_ --resource-group _resourcegroup_ --kind MongoDB --locations region=EastUS
-	b. az cosmosdb sql container create -g _resourcegroup_ -a _cosmosaccountname_ -d "deid" -n "metadata" --partition-key-path "/uri"
+10.  Create the Cosmos NoSQL database  
+  a. az cosmosdb create --name _cosmosdb_ --resource-group _resourcegroup_ --kind MongoDB --locations region=EastUS  
+  b. az cosmosdb sql container create -g _resourcegroup_ -a _cosmosaccountname_ -d "deid" -n "metadata" --partition-key-path "/uri"  
 
 11.	Deploy the metadata sync and custom Function app by configuring the Azure Function to pull from your forked GH repo or by cloning the repo and doing a publish.
 12.	Create the AI Search Index, Custom Skill and Indexer definitions (in that order) using the three JSON configuration files in the search-config folder of the Repo
