@@ -39,6 +39,8 @@ Deployment Steps –
 11.	Create the AI Search Index, Custom Skill and Indexer definitions (in that order) using the three JSON configuration files in the search-config folder of the Repo
 12.	Upload documents to the Blob Storage Container created in #3 and ensure the Indexer is running.
 
+This project conforms to the MIT licensing terms. Code is not indended as a complete production-ready solution and no warranty is implied.
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
