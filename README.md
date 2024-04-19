@@ -17,7 +17,7 @@ Deployment Steps –
 4.	Create a new Azure AI multi-service resource
   a.	**az cognitiveservices account create** –name _aiservice_ --resource-group _resourcegroup_ --kind CognitiveServices --sku Standard --yes
   
-5.	Create a new Azure Search instance
+5.	Create a new Azure AI Search instance
   a.	**az search service create** --name _searchservice_ --resource-group _resourcegroup_ –sku standard
   
 6.	Create two new App Service Plans – one for the Web application and one for standard Functions
