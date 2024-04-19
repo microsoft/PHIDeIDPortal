@@ -10,7 +10,7 @@
         <tr>
             <th nowrap>Document</th>
             <th>Author</th>
-            <!--<th>Content</th>-->
+            <th>Last Indexed</th>
             <th nowrap>Redacted Content</th>
             <th nowrap>Metadata</th>
         </tr>
@@ -27,12 +27,20 @@
             <tr class="@(i % 2 == 0 ? "row-even" : "row-odd")">
                 <td style="vertical-align: top;">@result.Document["metadata_storage_name"]</td>
                 <td style="vertical-align: top;">@result.Document["author"].ToString().Split('@')[0]</td>
+                <td style="vertical-align: top;">
+                    @{
+                        var lastIndexedString = (result.Document.ContainsKey("lastIndexed") && result.Document["lastIndexed"] is not null) ? result.Document["lastIndexed"] : DateTime.MinValue;
+                        DateTime.TryParse(lastIndexedString.ToString(), out DateTime lastIndexed);
+                        if (lastIndexed == DateTime.MinValue) { <span><i>unindexed</i></span> }
+                        else { <span>@lastIndexed</span> }
+                    }
+                </td>
                 <!-- <td style="vertical-align: top;">@result.Document["content"]</td> -->
                 <td style="vertical-align: top;" class="redacted-content-td tagged">
                     <div class="content">@redactedSummary @Html.Raw(piiHover)<div class="piiDetails">@result.Document["piiEntities"]</div></div>
                     <div style="padding: 0 !important; margin-top: 8px;" class="row">
                         <div>
-                            <textarea class="form-control submit-justification-text" rows="2" placeholder="Justification required to submit this document for exfiltration (required for manual review)."></textarea>
+                            <textarea class="form-control submit-justification-text" rows="2" placeholder="Justification for releasing with PHI (required for manual review)."></textarea>
                         </div>
                         <div data-id="@result.Document["id"]">
                             <button class="btn btn-secondary submit-justification-button" type="button" disabled><i class="bi bi-check-lg"></i> Request Manual Review</button>
@@ -47,7 +55,8 @@
                     }
                     @foreach (var tag in metadataTags)
                     {
-                        @Html.Raw($"<div class='tagCloudElem'><span>{tag}</span></div>")
+                        if (String.IsNullOrWhiteSpace(tag.ToString())) { @Html.Raw($"<div class='tagCloudElemPlaceholder'>&nbsp;<span></span></div>") }
+                        else { @Html.Raw($"<div class='tagCloudElem'><span>{tag}</span></div>") }
                     }
                 </td>
             </tr>

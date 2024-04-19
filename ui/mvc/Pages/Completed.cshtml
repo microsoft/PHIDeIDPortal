@@ -41,7 +41,8 @@
                     }
                     @foreach (var tag in metadataTags)
                     {
-                        @Html.Raw($"<div class='tagCloudElem'><span>{tag}</span></div>")
+                        if (String.IsNullOrWhiteSpace(tag.ToString())) { @Html.Raw($"<div class='tagCloudElemPlaceholder'>&nbsp;<span></span></div>") }
+                        else { @Html.Raw($"<div class='tagCloudElem'><span>{tag}</span></div>") }
                     }
                 </td>
             </tr>
