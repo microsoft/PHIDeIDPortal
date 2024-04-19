@@ -1,14 +1,39 @@
 # Project
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+PHI Deidentification Portal
 
-As the maintainer of this project, please make a few updates:
+Installation Instructions
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+![318910463-a3d9905d-6df7-4e2d-b0eb-d0c4e7e2ecb5](https://github.com/microsoft/PHIDeIDPortal/assets/112185610/1f74e6b9-0f94-40db-9fa8-aadd04433d24)
+ 
+Deployment Steps –
+1.	Clone or Fork repo
+2.	Create a new Storage Account
+  a.	**az storage account create** -n _storageaccount_ -g _resourcegroup_ --sku Standard_LRS
+  
+3.	Create a Storage Account container for document uploads
+  a.	**az storage container create** -n _container_ --account-name _storageaccount_
+  
+4.	Create a new Azure AI multi-service resource
+  a.	**az cognitiveservices account create** –name _aiservice_ --resource-group _resourcegroup_ --kind CognitiveServices --sku Standard --yes
+  
+5.	Create a new Azure Search instance
+  a.	**az search service create** --name _searchservice_ --resource-group _resourcegroup_ –sku standard
+  
+6.	Create two new App Service Plans – one for the Web application and one for standard Functions
+  a.	**az appservice plan create** -g _resourcegroup_ -n _plan1_ --sku S1
+  b.	**az appservice plan create** -g _resourcegroup_ -n _plan2_ --sku S1
+  
+7.	Create a new Azure Function instance for the metadata sync and custom skill
+  a.	**az functionapp create** --name functionapp --os-type Windows --resource-group _resourcegroup_ --runtime dotnet --storage-account _storageaccount_ --plan _plan1_
+  
+8.	Create the Web application for the DeID Web Portal
+  a.	Todo
+  
+9.	Deploy the metadata sync and custom Function app by configuring the Azure Function to pull from your forked GH repo or by cloning the repo and doing a publish.
+10.	Create the AI Search Index, Custom Skill and Indexer definitions (in that order) using the three JSON configuration files in the search-config folder of the Repo
+11.	Publish the Web application from the Web folder (TODO)
+12.	Upload documents to the Blob Storage Container created in #3 and ensure the Indexer is running.
 
 ## Contributing
 
