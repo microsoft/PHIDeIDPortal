@@ -65,8 +65,10 @@ namespace AISearch.CustomFunctions
                         cosmosRecord = new CosmosRecord { 
                             id = Guid.NewGuid().ToString(),
                             Uri = record.Data.Uri, 
+                            FileName = record.Data.Uri.Split('/').Last(),
                             Status = record.Data.Status,
                             Author = "N/A",
+                            LastIndexed = DateTime.UtcNow,
                             OrganizationalMetadata = []                          
                         };
                     }
@@ -75,6 +77,7 @@ namespace AISearch.CustomFunctions
                     if (int.Parse(cosmosRecord.Status) == (int)DeidStatus.Uploaded && int.Parse(record.Data.Status) > (int)DeidStatus.Uploaded)
                     {
                         cosmosRecord.Status = record.Data.Status;
+                        cosmosRecord.LastIndexed = DateTime.UtcNow;
                     }
 
                     // Update status on the Cosmos DB record

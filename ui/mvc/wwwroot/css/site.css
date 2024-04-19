@@ -96,7 +96,22 @@ body {
     cursor: pointer;
 }
 
+.tagCloudElem {
+    display: inline-block;
+    padding: 8px 24px;
+    border-radius: 8px;
+    margin: 8px 4px;
+    margin-top: 0;
+    cursor: pointer;
+}
+
 td .tagCloudElem {
+    margin: 4px 8px 4px 0 !important;
+    padding: 4px 24px !important;
+    cursor: default !important;
+}
+
+td .tagCloudElemPlaceholder {
     margin: 4px 8px 4px 0 !important;
     padding: 4px 24px !important;
     cursor: default !important;
@@ -151,7 +166,7 @@ td .tagCloudElem {
     font-size: 12pt;
     font-weight: 500;
     color: #444;
-    min-width: 680px;
+    min-width: 500px;
 }
 
 .redacted-content-td .form-control {
