@@ -26,14 +26,19 @@ Deployment Steps –
   
 7.	Create a new Azure Function instance for the metadata sync and custom skill
   a.	**az functionapp create** --name functionapp --os-type Windows --resource-group _resourcegroup_ --runtime dotnet --storage-account _storageaccount_ --plan _plan1_
+  b. Publish the Azure Function to the Function App Service
+
+9.	Create the Web application for the DeID Web Portal
+  a. az resource update --resource-group resourcegroup --name scm --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --parent sites/{appname} --set properties.allow=true
+  b. Publish the Web solution to the Web App Service
+  c. az webapp identity assign -g resourcegroup -n appname
+  d. az role assignment create --assignee systemassignedidentityguid --role "Storage Blob Data Contributor" --scope storageaccountid
+  e. az ad app create --display-name DeIdWeb --web-redirect-uris https://{appName}.azurewebsites.net/signin-oidc
   
-8.	Create the Web application for the DeID Web Portal
-  a.	Todo
-  
-9.	Deploy the metadata sync and custom Function app by configuring the Azure Function to pull from your forked GH repo or by cloning the repo and doing a publish.
-10.	Create the AI Search Index, Custom Skill and Indexer definitions (in that order) using the three JSON configuration files in the search-config folder of the Repo
-11.	Publish the Web application from the Web folder (TODO)
-12.	Upload documents to the Blob Storage Container created in #3 and ensure the Indexer is running.
+10.	Deploy the metadata sync and custom Function app by configuring the Azure Function to pull from your forked GH repo or by cloning the repo and doing a publish.
+11.	Create the AI Search Index, Custom Skill and Indexer definitions (in that order) using the three JSON configuration files in the search-config folder of the Repo
+12.	Publish the Web application from the Web folder (TODO)
+13.	Upload documents to the Blob Storage Container created in #3 and ensure the Indexer is running.
 
 ## Contributing
 
