@@ -24,7 +24,7 @@ Deployment Steps –
   a.	**az appservice plan create** -g _resourcegroup_ -n _plan1_ --sku S1
   b.	**az appservice plan create** -g _resourcegroup_ -n _plan2_ --sku S1
   
-7.	Create a new Azure Function instance for the metadata sync and custom skill
+8.	Create a new Azure Function instance for the metadata sync and custom skill
   a.	**az functionapp create** --name functionapp --os-type Windows --resource-group _resourcegroup_ --runtime dotnet --storage-account _storageaccount_ --plan _plan1_
   b. Publish the Azure Function to the Function App Service
 
