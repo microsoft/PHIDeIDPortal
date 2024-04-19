@@ -34,10 +34,14 @@ Deployment Steps –
   c. az webapp identity assign -g resourcegroup -n appname
   d. az role assignment create --assignee systemassignedidentityguid --role "Storage Blob Data Contributor" --scope storageaccountid
   e. az ad app create --display-name DeIdWeb --web-redirect-uris https://{appName}.azurewebsites.net/signin-oidc
-  
-10.	Deploy the metadata sync and custom Function app by configuring the Azure Function to pull from your forked GH repo or by cloning the repo and doing a publish.
-11.	Create the AI Search Index, Custom Skill and Indexer definitions (in that order) using the three JSON configuration files in the search-config folder of the Repo
-12.	Upload documents to the Blob Storage Container created in #3 and ensure the Indexer is running.
+
+10.  Create the Cosmos NoSQL database
+	a. az cosmosdb create --name _cosmosdb_ --resource-group _resourcegroup_ --kind MongoDB --locations region=EastUS
+	b. az cosmosdb sql container create -g _resourcegroup_ -a _cosmosaccountname_ -d "deid" -n "metadata" --partition-key-path "/uri"
+
+11.	Deploy the metadata sync and custom Function app by configuring the Azure Function to pull from your forked GH repo or by cloning the repo and doing a publish.
+12.	Create the AI Search Index, Custom Skill and Indexer definitions (in that order) using the three JSON configuration files in the search-config folder of the Repo
+13.	Upload documents to the Blob Storage Container created in #3 and ensure the Indexer is running.
 
 This project conforms to the MIT licensing terms. Code is not indended as a complete production-ready solution and no warranty is implied.
 
