@@ -224,6 +224,10 @@ phideid.ui = (function () {
                 }
 
             });
+        },
+
+        downloadFile(filename) {
+            window.open("/api/documents/" + filename, "_blank");
         }
 
     };
@@ -246,5 +250,5 @@ $(document).ready(function () {
     $(".submit-justification-text").bind("keyup", function (e) { var isValid = phideid.ui.checkInputLength($(this), 3); var btn = $(this).parents(".row").find(".submit-justification-button"); if (isValid) { $(btn).removeAttr("disabled"); } else { $(btn).attr("disabled", "disabled"); } });
     $(".submit-justification-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); phideid.ui.resetDocument(id, comment); });
     $(".delete-button").bind("click", function () { var id = $(this).parent().attr("data-id"); phideid.ui.deleteDocument(id); });
-
+    $(".download-button").bind("click", function () { var file = $(this).attr("data-href"); phideid.ui.downloadFile(file); });
 });

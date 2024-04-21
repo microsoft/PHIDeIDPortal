@@ -35,18 +35,14 @@ namespace PhiDeidPortal.Ui.Controllers
             _containerName = $"{_storageConfiguration["Container"]}";
         }
 
-        //[HttpGet]
-        //[Route("api/documents/{docId}")]
-        //public async Task<IActionResult> Get(string docId)
-        //{
-        //    var docRecord = _cosmosService.GetMetadataRecord(docId);
-        //    if (null == docRecord)
-        //        return new NotFoundResult();
-
-        //    return new FileStreamResult(
-        //        await _blobService.GetDocumentStreamAsync(_containerName, docRecord.FileName),
-        //        "application/octet-stream");
-        //}
+        [HttpGet]
+        [Route("api/documents/{filename}")]
+        public async Task<IActionResult> Get(string filename)
+        {
+            return new FileStreamResult(
+                await _blobService.GetDocumentStreamAsync(_containerName, filename),
+                "application/octet-stream");
+        }
 
         [Route("api/documents/upload")]
         public async Task<IActionResult> Post(IFormFile file)
