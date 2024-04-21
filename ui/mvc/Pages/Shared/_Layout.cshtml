@@ -30,65 +30,73 @@
     </header>
     <div class="container">
         <main role="main" class="pb-3">
-        <div>
-            <button type="button" class="btn btn-primary upload-button" data-bs-toggle="modal" data-bs-target="#uploadDialog">
-                <i class="bi bi-upload"></i>
-                <span>Upload document</span>
-            </button>
-        </div>
-        <div class="tab-bar row">
-            <div class="tab col" data-href="index">
-                <div class="unhighlight">
-                    <div>
-                        <div>All My Documents</div>
-                        <h2>@Model.TotalCount</h2>
+            <div>
+                <button type="button" class="btn btn-primary upload-button" data-bs-toggle="modal" data-bs-target="#uploadDialog">
+                    <i class="bi bi-upload"></i>
+                    <span>Upload document</span>
+                </button>
+            </div>
+            <div class="tab-bar row">
+                <div class="tab col" data-href="index">
+                    <div class="unhighlight">
+                        <div>
+                            <div>All My Documents</div>
+                            <h2>@Model.TotalCount</h2>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="tab col" data-href="unprocessed">
-                <div class="unhighlight">
-                    <div>
+                <div class="tab col" data-href="unprocessed">
+                    <div class="unhighlight">
+                        <div>
                             <div><i class="bi bi-filter"></i>Awaiting Processing</div>
                             <h2>@Model.UnprocessedCount</h2>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="tab col"  data-href="justification">
-                <div class="highlight">
-                    <div>
-                        <div><i class="bi bi-filter"></i>Needs PHI Justification</div>
+                <div class="tab col" data-href="justification">
+                    <div class="highlight">
+                        <div>
+                            <div><i class="bi bi-filter"></i>Needs PHI Justification</div>
                             <h2>@Model.JustificationCount</h2>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="tab col" data-href="review">
-                <div class="unhighlight">
-                    <div>
-                        <div><i class="bi bi-filter"></i>Awaiting Manual Review</div>
+                <div class="tab col" data-href="review">
+                    <div class="unhighlight">
+                        <div>
+                            <div><i class="bi bi-filter"></i>Awaiting Manual Review</div>
                             <h2>@Model.ReviewCount</h2>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="tab col" style="border-right:none;"  data-href="completed">
-                <div class="unhighlight">
-                    <div>
-                        <div><i class="bi bi-filter"></i>Completed</div>
+                <div class="tab col" style="border-right:none;" data-href="completed">
+                    <div class="unhighlight">
+                        <div>
+                            <div><i class="bi bi-filter"></i>Completed</div>
                             <h2>@Model.CompletedCount</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab col" style="border-right:none;" data-href="denied">
+                    <div class="unhighlight">
+                        <div>
+                            <div><i class="bi bi-filter"></i>Denied</div>
+                            <h2>@Model.DeniedCount</h2>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div>
-            <div class="row search-row">
-                <div class="col-xs-10 col-sm-10 col-md-10">
-                    <input type="text" class="form-control" placeholder="(Optional) Enter search terms. Use * to prefix match. Use + to match multiple terms." />
-                </div>
-                <div class="col-xs-2 col-sm-2 col-md-2">
-                    <button class="btn btn-primary search-button" type="button"><i class="bi bi-search"></i> Search</button>
+            <div>
+                <div class="row search-row">
+                    <div class="col-xs-10 col-sm-10 col-md-10">
+                        <input type="text" class="form-control" placeholder="(Optional) Enter search terms. Use * to prefix match. Use + to match multiple terms." />
+                    </div>
+                    <div class="col-xs-2 col-sm-2 col-md-2">
+                        <button class="btn btn-primary search-button" type="button"><i class="bi bi-search"></i> Search</button>
+                    </div>
                 </div>
             </div>
-        </div>
-        @RenderBody()
+            @RenderBody()
         </main>
     </div>
 
@@ -121,7 +129,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- AJAX loader -->
     <div class="loading">
         <div class="loading-background"></div>
@@ -132,7 +140,7 @@
         </div>
     </div>
 
-    <!-- Toast notification -->    
+    <!-- Toast notification -->
     <div class="toast-container position-fixed p-3 bottom-0 end-0" id="toastPlacement" data-original-class="toast-container position-absolute p-3">
         <div id="toast" class="toast align-items-center text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
