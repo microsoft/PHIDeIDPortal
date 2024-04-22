@@ -12,6 +12,7 @@ using PhiDeidPortal.Ui.Entities;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using PhiDeidPortal.Ui.Common;
 using System;
+using System.Net;
 
 namespace PhiDeidPortal.Ui.Controllers
 {
@@ -114,8 +115,16 @@ namespace PhiDeidPortal.Ui.Controllers
         [Route("api/documents/delete")]
         public async Task<IActionResult> Delete(DeleteDocumentRequestEntity document)
         {
-            var delete = await _searchService.DeleteDocument(document.Key);
-            if (!delete) return BadRequest("Reset document failed.");
+            var user = User.Identity?.Name;
+            if (user is null) return BadRequest("User identity cannot execute delete action.");
+            var cosmosDocument = _cosmosService.GetMetadataRecordByAuthorAndUri(user, document.Path);
+            if (cosmosDocument is null) return BadRequest("Document not found.");
+            var deleteBlob = await _blobService.DeleteDocumentAsync(_containerName, document.Path);
+            if (!deleteBlob.Value) return BadRequest("Reset document failed - Storage.");
+            var deleteCosmos = await _cosmosService.DeleteMetadataRecord(cosmosDocument);
+            if (deleteCosmos.StatusCode != HttpStatusCode.NoContent) return BadRequest("Reset document failed - Cosmos.");
+            var deleteIndex = await _searchService.DeleteDocument(document.Key);
+            if (!deleteIndex) return BadRequest("Reset document failed - Index.");
 
             return Ok();
         }

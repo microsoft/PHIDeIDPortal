@@ -68,7 +68,29 @@ namespace PhiDeidPortal.Ui.Services
             return docRecord;
         }
 
-        public async Task UpdateMetadataRecord(MetadataRecord document)
+        public MetadataRecord? GetMetadataRecordByAuthorAndUri(string author, string uri)
+        {
+            var docRecord = _cosmosClient
+                .GetDatabase(_cosmosDbName)
+                .GetContainer(_cosmosContainerName)
+                .GetItemLinqQueryable<MetadataRecord>(true)
+                .Where(d => d.Author == author && d.Uri == uri)
+                .FirstOrDefault();
+
+            return docRecord;
+        }
+
+        public async Task<ItemResponse<MetadataRecord>> DeleteMetadataRecord(MetadataRecord document)
+        {
+            var response = await _cosmosClient
+                .GetDatabase(_cosmosDbName)
+                .GetContainer(_cosmosContainerName)
+                .DeleteItemAsync<MetadataRecord>(document.id, new PartitionKey(document.Uri));
+
+            return response;
+        }
+
+        public async Task<ItemResponse<MetadataRecord>> UpdateMetadataRecord(MetadataRecord document)
         {
             var cosmosDbResponse = await _cosmosClient.CreateDatabaseIfNotExistsAsync(_cosmosDbName);
             var containerProperties = new ContainerProperties
@@ -78,11 +100,13 @@ namespace PhiDeidPortal.Ui.Services
             };
 
             var containerResponse = await cosmosDbResponse.Database.CreateContainerIfNotExistsAsync(containerProperties);
-            ItemResponse<MetadataRecord> recordResponse = await containerResponse.Container.UpsertItemAsync<MetadataRecord>(
+            var recordResponse = await containerResponse.Container.UpsertItemAsync<MetadataRecord>(
             item: document,
                 new PartitionKey(document.Uri)
                 );
-        }
 
+            return recordResponse;
+        }
+        
     }
 }
