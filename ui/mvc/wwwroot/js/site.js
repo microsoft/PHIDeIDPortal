@@ -258,10 +258,11 @@ phideid.ui = (function () {
             });
         },
 
-        deleteDocument(id) {
+        deleteDocument(id, file) {
 
             var formData = {};
             formData.key = id;
+            formData.path = file;
 
             phideid.ui.showLoadingIndicator();
 
@@ -307,6 +308,6 @@ $(document).ready(function () {
     $(".submit-justification-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); var file = $(this).attr("data-href"); phideid.ui.submitDocumentJustification(file, comment); });
     $(".approve-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); var file = $(this).attr("data-href"); phideid.ui.updateDocumentStatus(file, 4); });
     $(".deny-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); var file = $(this).attr("data-href"); phideid.ui.updateDocumentStatus(file, 5); });
-    $(".delete-button").bind("click", function () { var id = $(this).parent().attr("data-id"); phideid.ui.deleteDocument(id); });
+    $(".delete-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var file = $(this).attr("data-href"); phideid.ui.deleteDocument(id, file); });
     $(".download-button").bind("click", function () { var file = $(this).attr("data-href"); phideid.ui.downloadFile(file); });
 });
