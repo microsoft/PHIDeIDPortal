@@ -173,7 +173,7 @@ namespace PhiDeidPortal.Ui.Controllers
         }
 
         [HttpPost]
-        [Route("api/documents/justification")]
+        [Route("api/documents/justify")]
         public async Task<IActionResult> SubmitJustification(JustificationRequestEntity document)
         {
             var existingMetadataRecord = _cosmosService.GetMetadataRecord(document.Key);
@@ -188,7 +188,7 @@ namespace PhiDeidPortal.Ui.Controllers
                 FileName: existingMetadataRecord.FileName,
                 Uri: existingMetadataRecord.Uri,
                 Author: existingMetadataRecord.Author,
-                Status: (int)DeidStatus.Denied,
+                Status: (int)DeidStatus.RequiresJustification,
                 OrganizationalMetadata: existingMetadataRecord.OrganizationalMetadata,
                 JustificationText: document.JustificationText
                 );

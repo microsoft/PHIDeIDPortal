@@ -177,6 +177,65 @@ phideid.ui = (function () {
             return false;
         },
 
+        submitDocumentJustification(id, comment) {
+            var formData = {};
+            formData.key = id;
+            formData.JustificationText = comment;
+
+            phideid.ui.showLoadingIndicator();
+
+            $.ajax({
+                url: '/api/documents/justify',
+                type: 'POST',
+                data: JSON.stringify(formData),
+                contentType: 'application/json',
+                success: function (data) {
+                    phideid.ui.hideLoadingIndicator();
+                    phideid.ui.showToast("Document updated.");
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    phideid.ui.hideLoadingIndicator();
+                    phideid.ui.showToast("There was an error updating the document: XMLHttpRequest.responseText. Please try again.");
+                }
+
+            });
+        }
+
+        updateDocumentStatus(id, status) {
+            var formData = {};
+            formData.key = id;
+
+            var url = '';
+
+            if (status === 3) {
+                url = '/api/documents/justify';
+            }
+            else if (status === 4) {
+                url = '/api/documents/approve';
+            }
+            else if (status === 5) {
+                url = '/api/documents/deny';
+            }
+
+            phideid.ui.showLoadingIndicator();
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: JSON.stringify(formData),
+                contentType: 'application/json',
+                success: function (data) {
+                    phideid.ui.hideLoadingIndicator();
+                    phideid.ui.showToast("Document updated.");
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    phideid.ui.hideLoadingIndicator();
+                    phideid.ui.showToast("There was an error updating the document: XMLHttpRequest.responseText. Please try again.");
+                }
+
+            });
+        },
+
         resetDocument(id, comment) {
 
             var formData = {};
@@ -248,7 +307,9 @@ $(document).ready(function () {
     $('#uploadTagEntry').bind('keypress', function (e) { phideid.ui.preventNonAlphaNumericKeys(e); });
     $(".search-row .search-button").bind("click", function () { phideid.ui.search() });
     $(".submit-justification-text").bind("keyup", function (e) { var isValid = phideid.ui.checkInputLength($(this), 3); var btn = $(this).parents(".row").find(".submit-justification-button"); if (isValid) { $(btn).removeAttr("disabled"); } else { $(btn).attr("disabled", "disabled"); } });
-    $(".submit-justification-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); phideid.ui.resetDocument(id, comment); });
+    $(".submit-justification-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); phideid.ui.updateDocumentStatus(id, comment); phideid.ui.resetDocument(id, comment); });
+    $(".approve-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); phideid.ui.updateDocumentStatus(id, 4); });
+    $(".deny-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); phideid.ui.updateDocumentStatus(id, 5); });
     $(".delete-button").bind("click", function () { var id = $(this).parent().attr("data-id"); phideid.ui.deleteDocument(id); });
     $(".download-button").bind("click", function () { var file = $(this).attr("data-href"); phideid.ui.downloadFile(file); });
 });
