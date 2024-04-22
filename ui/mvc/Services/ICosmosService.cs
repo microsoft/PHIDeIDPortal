@@ -6,5 +6,6 @@ namespace PhiDeidPortal.Ui.Services
     {
         MetadataRecord? GetMetadataRecord(string docId);
         Task<ItemResponse<MetadataRecord>> UpsertMetadataRecord(MetadataRecord record);
+        MetadataRecord? GetMetadataRecordByUri(string uri);
     }
 }

@@ -56,6 +56,18 @@ namespace PhiDeidPortal.Ui.Services
             return docRecord;
         }
 
+        public MetadataRecord? GetMetadataRecordByUri(string uri)
+        {
+            var docRecord = _cosmosClient
+                .GetDatabase(_cosmosDbName)
+                .GetContainer(_cosmosContainerName)
+                .GetItemLinqQueryable<MetadataRecord>(true)
+                .Where(d => d.Uri == uri)
+                .FirstOrDefault();
+
+            return docRecord;
+        }
+
         public async Task UpdateMetadataRecord(MetadataRecord document)
         {
             var cosmosDbResponse = await _cosmosClient.CreateDatabaseIfNotExistsAsync(_cosmosDbName);

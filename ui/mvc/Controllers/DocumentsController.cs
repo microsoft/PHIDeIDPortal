@@ -188,7 +188,7 @@ namespace PhiDeidPortal.Ui.Controllers
         [Route("api/documents/justify")]
         public async Task<IActionResult> SubmitJustification(JustificationRequestEntity document)
         {
-            var existingMetadataRecord = _cosmosService.GetMetadataRecord(document.Key);
+            var existingMetadataRecord = _cosmosService.GetMetadataRecordByUri(document.Key);
 
             if (existingMetadataRecord == null)
             {
