@@ -16,13 +16,13 @@ namespace PhiDeidPortal.Ui.Pages
     public class ReviewModel : PhiDeidPageModelBase
     {
         private readonly ILogger<ReviewModel> _logger;
-
-        //private readonly UserManager<IdentityUser> _userManager;
+        private readonly ICosmosService _cosmosService;
 
         public ReviewModel(ILogger<ReviewModel> logger, IAISearchService indexQueryer, CosmosClient cosmosClient, IConfiguration configRoot)
             : base(indexQueryer, cosmosClient, configRoot)
         {
             _logger = logger;
+            _cosmosService = new CosmosService(cosmosClient, configRoot);
         }
 
         public async Task OnGet()
@@ -35,6 +35,18 @@ namespace PhiDeidPortal.Ui.Pages
             var searchString = Request.Query["q"].ToString() ?? "*";
 
             await Query(filter, searchString);
+        }
+
+        public async Task<string> GetJustificationText(string docId)
+        {
+            var document = _cosmosService.GetMetadataRecord(docId);
+
+            if (null != document)
+            { 
+                return document.JustificationText;
+            }
+
+            return "No justification provided.";
         }
     }
 }

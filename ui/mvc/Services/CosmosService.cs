@@ -1,4 +1,5 @@
 ﻿using Azure.Storage.Blobs;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
 
 namespace PhiDeidPortal.Ui.Services
@@ -54,5 +55,22 @@ namespace PhiDeidPortal.Ui.Services
 
             return docRecord;
         }
+
+        public async Task UpdateMetadataRecord(MetadataRecord document)
+        {
+            var cosmosDbResponse = await _cosmosClient.CreateDatabaseIfNotExistsAsync(_cosmosDbName);
+            var containerProperties = new ContainerProperties
+            {
+                PartitionKeyPath = _cosmosPartitionKey,
+                Id = _cosmosContainerName
+            };
+
+            var containerResponse = await cosmosDbResponse.Database.CreateContainerIfNotExistsAsync(containerProperties);
+            ItemResponse<MetadataRecord> recordResponse = await containerResponse.Container.UpsertItemAsync<MetadataRecord>(
+            item: document,
+                new PartitionKey(document.Uri)
+                );
+        }
+
     }
 }

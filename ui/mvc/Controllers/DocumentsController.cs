@@ -10,6 +10,8 @@ using PhiDeidPortal.Ui;
 using PhiDeidPortal.Ui.Services;
 using PhiDeidPortal.Ui.Entities;
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using PhiDeidPortal.Ui.Common;
+using System;
 
 namespace PhiDeidPortal.Ui.Controllers
 {
@@ -81,7 +83,8 @@ namespace PhiDeidPortal.Ui.Controllers
                 Uri: uri,
                 Author: User.Identity.Name,
                 Status: 1,
-                OrganizationalMetadata: organizationalMetadata.ToArray()
+                OrganizationalMetadata: organizationalMetadata.ToArray(),
+                JustificationText: ""
                 );
 
                 await _cosmosService.UpsertMetadataRecord(metadataRecord);
@@ -113,6 +116,84 @@ namespace PhiDeidPortal.Ui.Controllers
         {
             var delete = await _searchService.DeleteDocument(document.Key);
             if (!delete) return BadRequest("Reset document failed.");
+
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("api/documents/approve")]
+        public async Task<IActionResult> Approve(ApproveDocumentRequestEntity document)
+        {
+            var existingMetadataRecord = _cosmosService.GetMetadataRecord(document.Key);
+
+            if (existingMetadataRecord == null)
+            {
+                return BadRequest("Document not found.");
+            }
+
+            MetadataRecord newMetadataRecord = new(
+                id: existingMetadataRecord.id,
+                FileName: existingMetadataRecord.FileName,
+                Uri: existingMetadataRecord.Uri,
+                Author: existingMetadataRecord.Author,
+                Status: (int) DeidStatus.Approved,
+                OrganizationalMetadata: existingMetadataRecord.OrganizationalMetadata,
+                JustificationText: existingMetadataRecord.JustificationText
+                );
+
+            await _cosmosService.UpsertMetadataRecord(newMetadataRecord);
+
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("api/documents/deny")]
+        public async Task<IActionResult> Deny(DenyDocumentRequestEntity document)
+        {
+            var existingMetadataRecord = _cosmosService.GetMetadataRecord(document.Key);
+
+            if (existingMetadataRecord == null)
+            {
+                return BadRequest("Document not found.");
+            }
+
+            MetadataRecord newMetadataRecord = new(
+                id: existingMetadataRecord.id,
+                FileName: existingMetadataRecord.FileName,
+                Uri: existingMetadataRecord.Uri,
+                Author: existingMetadataRecord.Author,
+                Status: (int)DeidStatus.Denied,
+                OrganizationalMetadata: existingMetadataRecord.OrganizationalMetadata,
+                JustificationText: existingMetadataRecord.JustificationText
+                );
+
+            await _cosmosService.UpsertMetadataRecord(newMetadataRecord);
+
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("api/documents/justification")]
+        public async Task<IActionResult> SubmitJustification(JustificationRequestEntity document)
+        {
+            var existingMetadataRecord = _cosmosService.GetMetadataRecord(document.Key);
+
+            if (existingMetadataRecord == null)
+            {
+                return BadRequest("Document not found.");
+            }
+
+            MetadataRecord newMetadataRecord = new(
+                id: existingMetadataRecord.id,
+                FileName: existingMetadataRecord.FileName,
+                Uri: existingMetadataRecord.Uri,
+                Author: existingMetadataRecord.Author,
+                Status: (int)DeidStatus.Denied,
+                OrganizationalMetadata: existingMetadataRecord.OrganizationalMetadata,
+                JustificationText: document.JustificationText
+                );
+
+            await _cosmosService.UpsertMetadataRecord(newMetadataRecord);
 
             return Ok();
         }
