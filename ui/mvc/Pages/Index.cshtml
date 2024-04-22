@@ -10,6 +10,7 @@
         <tr>
             <th nowrap>Document</th>
             <th>Author</th>
+            <th>Status</th>
             <th>Last Indexed</th>
             <th nowrap>Metadata</th>
         </tr>
@@ -22,17 +23,38 @@
                 <td style="vertical-align: top;">@result.Author.ToString().Split('@')[0]</td>
                 <td style="vertical-align: top;">
                     @{
+                        var enumParsed = DeidStatus.TryParse(result.Status.ToString(), out DeidStatus deidStatus);
+                        if (enumParsed)
+                        {
+                            @deidStatus
+                        }
+                    }
+                </td>
+                <td style="vertical-align: top;">
+                    @{
                         var lastIndexedString = (result.LastIndexed is not null) ? result.LastIndexed : DateTime.MinValue;
                         DateTime.TryParse(lastIndexedString.ToString(), out DateTime lastIndexed);
-                        if (lastIndexed == DateTime.MinValue) { <span><i>unindexed</i></span> }
-                        else { <span>@lastIndexed</span> }
+                        if (lastIndexed == DateTime.MinValue)
+                        {
+                            <span><i>unindexed</i></span>
+                        }
+                        else
+                        {
+                            <span>@lastIndexed</span>
+                        }
                     }
                 </td>
                 <td style="vertical-align: top;">
                     @foreach (var tag in result.OrganizationalMetadata)
                     {
-                        if (String.IsNullOrWhiteSpace(tag.ToString())) { @Html.Raw($"<div class='tagCloudElemPlaceholder'>&nbsp;<span></span></div>") }
-                        else { @Html.Raw($"<div class='tagCloudElem'><span>{tag}</span></div>") }
+                        if (String.IsNullOrWhiteSpace(tag.ToString()))
+                        {
+                            @Html.Raw($"<div class='tagCloudElemPlaceholder'>&nbsp;<span></span></div>")
+                        }
+                        else
+                        {
+                            @Html.Raw($"<div class='tagCloudElem'><span>{tag}</span></div>")
+                        }
                     }
                 </td>
             </tr>

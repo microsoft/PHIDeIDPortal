@@ -19,6 +19,7 @@ namespace PhiDeidPortal.Ui.PageModels
         public int CompletedCount { get; set; }
         public int UnprocessedCount { get; set; }
         public int TotalCount { get; set; }
+        public int DeniedCount { get; set; }
 
         private readonly IAISearchService _indexQueryer;
         private readonly CosmosClient _cosmosClient;
@@ -47,7 +48,7 @@ namespace PhiDeidPortal.Ui.PageModels
             JustificationCount = _cosmosResults.Count(x => x.Status == 2);
             ReviewCount = _cosmosResults.Count(x => x.Status == 3);
             CompletedCount = _cosmosResults.Count(x => x.Status == 4);
-
+            DeniedCount = _cosmosResults.Count(x => x.Status == 5);
         }
 
         public bool IsAuthorized

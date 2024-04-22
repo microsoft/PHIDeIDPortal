@@ -1,0 +1,57 @@
+﻿@page
+@model DeniedModel
+@{
+    ViewData["Title"] = "Denied";
+    int i = 0;
+}
+
+<table id="tblDocs" class="table">
+    <thead>
+        <tr>
+            <th nowrap>Document</th>
+            <th>Author</th>
+            <th nowrap>Redacted Content</th>
+            <th nowrap>Metadata</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (SearchResult<SearchDocument> result in Model.DocumentSearchResults)
+        {
+
+            var redactedSummary = ((String)result.Document["redactedContent"]).Length > 512 ? ((String)result.Document["redactedContent"]).Substring(0, 511) + "..." : result.Document["redactedContent"];
+
+            <tr class="@(i % 2 == 0 ? "row-even" : "row-odd")">
+                <td style="vertical-align: top;">@result.Document["metadata_storage_name"]</td>
+                <td style="vertical-align: top;">@result.Document["author"].ToString().Split('@')[0]</td>
+                <!-- <td style="vertical-align: top;">@result.Document["content"]</td> -->
+                <td style="vertical-align: top;" class="redacted-content-td">
+                    <div class="content">@redactedSummary</div>
+                    <div style="padding: 0 !important; margin-top: 8px;">
+                        <div>
+                            <button class="btn btn-success" type="button"><i class="bi bi-check-lg"></i> Approved (TODO)</button>
+                            <button class="btn btn-danger" type="button"><i class="bi bi-x-lg"></i> Denied (TODO)</button>
+                            <button class="btn btn-secondary" type="button"><i class="bi bi-download"></i> Download (TODO)</button>
+                        </div>
+                    </div>
+                </td>
+                <td style="vertical-align: top;">
+                    @{
+                        var metadataTags = (object[])result.Document["organizationalMetadata"];
+                    }
+                    @foreach (var tag in metadataTags)
+                    {
+                        if (String.IsNullOrWhiteSpace(tag.ToString()))
+                        {
+                            @Html.Raw($"<div class='tagCloudElemPlaceholder'>&nbsp;<span></span></div>")
+                        }
+                        else
+                        {
+                            @Html.Raw($"<div class='tagCloudElem'><span>{tag}</span></div>")
+                        }
+                    }
+                </td>
+            </tr>
+
+            i++;
+        }
+    </tbody>
