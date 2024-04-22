@@ -143,6 +143,12 @@ namespace PhiDeidPortal.Ui.Controllers
 
             await _cosmosService.UpsertMetadataRecord(newMetadataRecord);
 
+            // todo update cosmos with document.Id and document.Message
+            var reset = await _searchService.ResetDocument(document.Key);
+            if (!reset) return BadRequest("Reset document failed.");
+            var reindex = await _searchService.RunIndexer(String.Empty);
+            if (!reindex) return BadRequest("Reindex failed.");
+
             return Ok();
         }
 
@@ -169,6 +175,12 @@ namespace PhiDeidPortal.Ui.Controllers
 
             await _cosmosService.UpsertMetadataRecord(newMetadataRecord);
 
+            // todo update cosmos with document.Id and document.Message
+            var reset = await _searchService.ResetDocument(document.Key);
+            if (!reset) return BadRequest("Reset document failed.");
+            var reindex = await _searchService.RunIndexer(String.Empty);
+            if (!reindex) return BadRequest("Reindex failed.");
+
             return Ok();
         }
 
@@ -194,6 +206,12 @@ namespace PhiDeidPortal.Ui.Controllers
                 );
 
             await _cosmosService.UpsertMetadataRecord(newMetadataRecord);
+
+            // todo update cosmos with document.Id and document.Message
+            var reset = await _searchService.ResetDocument(document.Key);
+            if (!reset) return BadRequest("Reset document failed.");
+            var reindex = await _searchService.RunIndexer(String.Empty);
+            if (!reindex) return BadRequest("Reindex failed.");
 
             return Ok();
         }
