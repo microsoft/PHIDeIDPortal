@@ -5,7 +5,7 @@
         Uploaded = 1,
         RequiresJustification = 2,
         JustificationApprovalPending = 3,
-        Completed = 4,
+        Approved = 4,
         Denied = 5
     }
 }

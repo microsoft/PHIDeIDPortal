@@ -6,6 +6,7 @@
         string FileName,
         int Status,
         string Author,
-        string[] OrganizationalMetadata
+        string[] OrganizationalMetadata,
+        string JustificationText
     );
 }

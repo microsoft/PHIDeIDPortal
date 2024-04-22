@@ -16,7 +16,7 @@ namespace PhiDeidPortal.Ui.PageModels
 
         public int ReviewCount { get; set; }
         public int JustificationCount { get; set; }
-        public int CompletedCount { get; set; }
+        public int ApprovedCount { get; set; }
         public int UnprocessedCount { get; set; }
         public int TotalCount { get; set; }
         public int DeniedCount { get; set; }
@@ -47,7 +47,7 @@ namespace PhiDeidPortal.Ui.PageModels
             UnprocessedCount = _cosmosResults.Count(x => x.Status == 1);
             JustificationCount = _cosmosResults.Count(x => x.Status == 2);
             ReviewCount = _cosmosResults.Count(x => x.Status == 3);
-            CompletedCount = _cosmosResults.Count(x => x.Status == 4);
+            ApprovedCount = _cosmosResults.Count(x => x.Status == 4);
             DeniedCount = _cosmosResults.Count(x => x.Status == 5);
         }
 

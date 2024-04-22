@@ -43,9 +43,9 @@
                             <textarea class="form-control submit-justification-text" rows="2" placeholder="Justification for releasing with PHI (required for manual review)."></textarea>
                         </div>
                         <div data-id="@result.Document["id"]">
-                            <button class="btn btn-secondary submit-justification-button" type="button" disabled><i class="bi bi-check-lg"></i> Request Manual Review</button>
+                            <button class="btn btn-secondary submit-justification-button" type="button" disabled data-href='@result.Document["metadata_storage_path"]'><i class="bi bi-check-lg"></i> Request Manual Review</button>
                             <button class="btn btn-secondary download-button" type="button" id="download-button" data-href='@result.Document["metadata_storage_name"]'><i class="bi bi-download"></i> Download</button>
-                            <button class="btn btn-danger delete-button" type="button"><i class="bi bi-x-lg"></i> Delete</button>
+                            <button class="btn btn-danger delete-button" type="button" data-href='@result.Document["metadata_storage_path"]'><i class="bi bi-x-lg"></i> Delete</button>
                         </div>
                     </div>
                 </td>

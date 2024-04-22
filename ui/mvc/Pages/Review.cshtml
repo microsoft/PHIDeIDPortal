@@ -40,11 +40,13 @@
                         <td style="vertical-align: top;" class="redacted-content-td tagged">
                             <div class="content">@redactedSummary @Html.Raw(piiHover)<div class="piiDetails">@result.Document["piiEntities"]</div></div>
                             <div style="padding: 0 !important; margin-top: 8px;" class="row">
-                                <div class='col-sm-7'><input class="form-control" type="text" placeholder="No justification provided." readonly></input></div>
+                                <div class='col-sm-7'>
+                                    <input class="form-control" type="text" value="@Model.GetJustificationText(result.Document["id"].ToString())" readonly></input>
+                                </div>
                                 <div class='col-sm-5'>
                                     <button class="btn btn-secondary download-button" type="button" id="download-button" data-href='@result.Document["metadata_storage_name"]'><i class="bi bi-download"></i> Download</button>
-                                    <button class="btn btn-success" type="button"><i class="bi bi-check-lg"></i> Approve</button>
-                                    <button class="btn btn-danger" type="button"><i class="bi bi-x-lg"></i> Deny</button>
+                                    <button class="btn btn-success approve-button" type="button" data-href='@result.Document["metadata_storage_path"]'><i class="bi bi-check-lg"></i> Approve</button>
+                                    <button class="btn btn-danger deny-button" type="buttondata-href='@result.Document["metadata_storage_path"]'"><i class="bi bi-x-lg"></i> Deny</button>
                                 </div>
                             </div>
                         </td>
