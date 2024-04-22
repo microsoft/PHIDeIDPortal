@@ -200,7 +200,7 @@ namespace PhiDeidPortal.Ui.Controllers
                 FileName: existingMetadataRecord.FileName,
                 Uri: existingMetadataRecord.Uri,
                 Author: existingMetadataRecord.Author,
-                Status: (int)DeidStatus.RequiresJustification,
+                Status: (int)DeidStatus.JustificationApprovalPending,
                 OrganizationalMetadata: existingMetadataRecord.OrganizationalMetadata,
                 JustificationText: document.JustificationText
                 );
