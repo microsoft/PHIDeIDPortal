@@ -37,9 +37,9 @@ namespace PhiDeidPortal.Ui.Pages
             await Query(filter, searchString);
         }
 
-        public async Task<string> GetJustificationText(string docId)
+        public async Task<string> GetJustificationText(string uri)
         {
-            var document = _cosmosService.GetMetadataRecord(docId);
+            var document = _cosmosService.GetMetadataRecordByUri(uri);
 
             if (null != document)
             { 

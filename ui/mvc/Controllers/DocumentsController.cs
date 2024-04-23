@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Razor.TagHelpers;
 using PhiDeidPortal.Ui.Common;
 using System;
 using System.Net;
+using System.Reflection.Metadata;
 
 namespace PhiDeidPortal.Ui.Controllers
 {
@@ -85,6 +86,7 @@ namespace PhiDeidPortal.Ui.Controllers
                 Author: User.Identity.Name,
                 Status: 1,
                 OrganizationalMetadata: organizationalMetadata.ToArray(),
+                LastIndexed: DateTime.MinValue,
                 JustificationText: ""
                 );
 
@@ -100,7 +102,7 @@ namespace PhiDeidPortal.Ui.Controllers
 
         [HttpPost]
         [Route("api/documents/reset")]
-        public async Task<IActionResult> Reset(ResetDocumentWithMessageRequestEntity document)
+        public async Task<IActionResult> Reset(StatusChangeRequestEntity document)
         {
             // todo update cosmos with document.Id and document.Message
             var reset = await _searchService.ResetDocument(document.Key);
@@ -115,11 +117,9 @@ namespace PhiDeidPortal.Ui.Controllers
         [Route("api/documents/delete")]
         public async Task<IActionResult> Delete(DeleteDocumentRequestEntity document)
         {
-            var user = User.Identity?.Name;
-            if (user is null) return BadRequest("User identity cannot execute delete action.");
-            var cosmosDocument = _cosmosService.GetMetadataRecordByAuthorAndUri(user, document.Path);
-            if (cosmosDocument is null) return BadRequest("Document not found.");
-            var deleteBlob = await _blobService.DeleteDocumentAsync(_containerName, document.Path);
+            var cosmosDocument = GetMetadataRecordByAuthorAndUri(document.Uri);
+            if (cosmosDocument is null) return BadRequest("Document not found for the given author.");
+            var deleteBlob = await _blobService.DeleteDocumentAsync(_containerName, document.Uri);
             if (!deleteBlob.Value) return BadRequest("Reset document failed - Storage.");
             var deleteCosmos = await _cosmosService.DeleteMetadataRecord(cosmosDocument);
             if (deleteCosmos.StatusCode != HttpStatusCode.NoContent) return BadRequest("Reset document failed - Cosmos.");
@@ -131,14 +131,10 @@ namespace PhiDeidPortal.Ui.Controllers
 
         [HttpPost]
         [Route("api/documents/approve")]
-        public async Task<IActionResult> Approve(ApproveDocumentRequestEntity document)
+        public async Task<IActionResult> Approve(StatusChangeRequestEntity document)
         {
-            var existingMetadataRecord = _cosmosService.GetMetadataRecord(document.Key);
-
-            if (existingMetadataRecord == null)
-            {
-                return BadRequest("Document not found.");
-            }
+            var existingMetadataRecord = GetMetadataRecordByAuthorAndUri(document.Uri);
+            if (existingMetadataRecord is null) return BadRequest("Document not found for the given author.");
 
             MetadataRecord newMetadataRecord = new(
                 id: existingMetadataRecord.id,
@@ -147,9 +143,10 @@ namespace PhiDeidPortal.Ui.Controllers
                 Author: existingMetadataRecord.Author,
                 Status: (int) DeidStatus.Approved,
                 OrganizationalMetadata: existingMetadataRecord.OrganizationalMetadata,
+                LastIndexed: existingMetadataRecord.LastIndexed,
                 JustificationText: existingMetadataRecord.JustificationText
                 );
-
+            
             await _cosmosService.UpsertMetadataRecord(newMetadataRecord);
 
             // todo update cosmos with document.Id and document.Message
@@ -163,14 +160,10 @@ namespace PhiDeidPortal.Ui.Controllers
 
         [HttpPost]
         [Route("api/documents/deny")]
-        public async Task<IActionResult> Deny(DenyDocumentRequestEntity document)
+        public async Task<IActionResult> Deny(StatusChangeRequestEntity document)
         {
-            var existingMetadataRecord = _cosmosService.GetMetadataRecord(document.Key);
-
-            if (existingMetadataRecord == null)
-            {
-                return BadRequest("Document not found.");
-            }
+            var existingMetadataRecord = GetMetadataRecordByAuthorAndUri(document.Uri);
+            if (existingMetadataRecord is null) return BadRequest("Document not found for the given author.");
 
             MetadataRecord newMetadataRecord = new(
                 id: existingMetadataRecord.id,
@@ -179,6 +172,7 @@ namespace PhiDeidPortal.Ui.Controllers
                 Author: existingMetadataRecord.Author,
                 Status: (int)DeidStatus.Denied,
                 OrganizationalMetadata: existingMetadataRecord.OrganizationalMetadata,
+                LastIndexed: existingMetadataRecord.LastIndexed,
                 JustificationText: existingMetadataRecord.JustificationText
                 );
 
@@ -195,14 +189,10 @@ namespace PhiDeidPortal.Ui.Controllers
 
         [HttpPost]
         [Route("api/documents/justify")]
-        public async Task<IActionResult> SubmitJustification(JustificationRequestEntity document)
+        public async Task<IActionResult> SubmitJustification(StatusChangeRequestEntity document)
         {
-            var existingMetadataRecord = _cosmosService.GetMetadataRecordByUri(document.Key);
-
-            if (existingMetadataRecord == null)
-            {
-                return BadRequest("Document not found.");
-            }
+            var existingMetadataRecord = GetMetadataRecordByAuthorAndUri(document.Uri);
+            if (existingMetadataRecord is null) return BadRequest("Document not found for the given author.");
 
             MetadataRecord newMetadataRecord = new(
                 id: existingMetadataRecord.id,
@@ -211,18 +201,26 @@ namespace PhiDeidPortal.Ui.Controllers
                 Author: existingMetadataRecord.Author,
                 Status: (int)DeidStatus.JustificationApprovalPending,
                 OrganizationalMetadata: existingMetadataRecord.OrganizationalMetadata,
-                JustificationText: document.JustificationText
+                LastIndexed: existingMetadataRecord.LastIndexed,
+                JustificationText: document.Comment ??= ""
                 );
 
             await _cosmosService.UpsertMetadataRecord(newMetadataRecord);
 
-            // todo update cosmos with document.Id and document.Message
             var reset = await _searchService.ResetDocument(document.Key);
             if (!reset) return BadRequest("Reset document failed.");
             var reindex = await _searchService.RunIndexer(String.Empty);
             if (!reindex) return BadRequest("Reindex failed.");
 
             return Ok();
+        }
+
+        private MetadataRecord? GetMetadataRecordByAuthorAndUri(string uri)
+        {
+            var user = User.Identity?.Name;
+            if (user is null) return null;
+            var cosmosDocument = _cosmosService.GetMetadataRecordByAuthorAndUri(user, uri);
+            return cosmosDocument;
         }
     }
 }
