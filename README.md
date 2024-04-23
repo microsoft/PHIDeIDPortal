@@ -21,7 +21,7 @@ Deployment Steps –
   a. **az search service create** --name _searchservice_ --resource-group _resourcegroup_ –sku standard
 
 6.  Create the Cosmos NoSQL database  
-  a. az cosmosdb create --name _cosmosdb_ --resource-group _resourcegroup_ --kind GlobalDocumentDB --locations region=EastUS  
+  a. az cosmosdb create --name _cosmosdb_ --resource-group _resourcegroup_ --kind GlobalDocumentDB --locations regionName=EastUS  
   b. az cosmosdb sql container create -g _resourcegroup_ -a _cosmosaccountname_ -d "deid" -n "metadata" --partition-key-path "/uri"  
   
 7. Create two new App Service Plans – one for the Web application and one for standard Functions  
