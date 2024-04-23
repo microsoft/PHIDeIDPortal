@@ -25,16 +25,18 @@ namespace PhiDeidPortal.Ui.Controllers
         private readonly ICosmosService _cosmosService;
         private readonly IConfigurationSection _storageConfiguration;
         private readonly IAISearchService _searchService;
+        private readonly Services.IAuthorizationService _authorizationService;
 
         private readonly string _containerName = "";
 
 
-        public DocumentsController(IBlobService blobService, IConfiguration configuration, CosmosClient cosmosClient, IAISearchService searchService, ICosmosService cosmosService)
+        public DocumentsController(IBlobService blobService, IConfiguration configuration, CosmosClient cosmosClient, IAISearchService searchService, ICosmosService cosmosService, Services.IAuthorizationService authorizationService)
         {
             _blobService = blobService;
             _storageConfiguration = configuration.GetSection("StorageAccount");
             _cosmosService = cosmosService;
             _searchService = searchService;
+            _authorizationService = authorizationService;
 
             _containerName = $"{_storageConfiguration["Container"]}";
         }
@@ -117,7 +119,7 @@ namespace PhiDeidPortal.Ui.Controllers
         [Route("api/documents/delete")]
         public async Task<IActionResult> Delete(DeleteDocumentRequestEntity document)
         {
-            var cosmosDocument = GetMetadataRecordByAuthorAndUri(document.Uri);
+            var cosmosDocument = GetMetadataRecordByUri(document.Uri);
             if (cosmosDocument is null) return BadRequest("Document not found for the given author.");
             var deleteBlob = await _blobService.DeleteDocumentAsync(_containerName, document.Uri);
             if (!deleteBlob.Value) return BadRequest("Reset document failed - Storage.");
@@ -133,8 +135,8 @@ namespace PhiDeidPortal.Ui.Controllers
         [Route("api/documents/approve")]
         public async Task<IActionResult> Approve(StatusChangeRequestEntity document)
         {
-            var existingMetadataRecord = GetMetadataRecordByAuthorAndUri(document.Uri);
-            if (existingMetadataRecord is null) return BadRequest("Document not found for the given author.");
+            var existingMetadataRecord = GetMetadataRecordByUri(document.Uri, true);
+            if (existingMetadataRecord is null) return BadRequest("Document not found for the given approver.");
 
             MetadataRecord newMetadataRecord = new(
                 id: existingMetadataRecord.id,
@@ -162,8 +164,8 @@ namespace PhiDeidPortal.Ui.Controllers
         [Route("api/documents/deny")]
         public async Task<IActionResult> Deny(StatusChangeRequestEntity document)
         {
-            var existingMetadataRecord = GetMetadataRecordByAuthorAndUri(document.Uri);
-            if (existingMetadataRecord is null) return BadRequest("Document not found for the given author.");
+            var existingMetadataRecord = GetMetadataRecordByUri(document.Uri, true);    
+            if (existingMetadataRecord is null) return BadRequest("Document not found for the given approver.");
 
             MetadataRecord newMetadataRecord = new(
                 id: existingMetadataRecord.id,
@@ -191,7 +193,7 @@ namespace PhiDeidPortal.Ui.Controllers
         [Route("api/documents/justify")]
         public async Task<IActionResult> SubmitJustification(StatusChangeRequestEntity document)
         {
-            var existingMetadataRecord = GetMetadataRecordByAuthorAndUri(document.Uri);
+            var existingMetadataRecord = GetMetadataRecordByUri(document.Uri);
             if (existingMetadataRecord is null) return BadRequest("Document not found for the given author.");
 
             MetadataRecord newMetadataRecord = new(
@@ -215,12 +217,14 @@ namespace PhiDeidPortal.Ui.Controllers
             return Ok();
         }
 
-        private MetadataRecord? GetMetadataRecordByAuthorAndUri(string uri)
+        private MetadataRecord? GetMetadataRecordByUri(string uri, bool adminOnly = false)
         {
             var user = User.Identity?.Name;
             if (user is null) return null;
+            if (adminOnly && !_authorizationService.Authorize(User)) return null;
             var cosmosDocument = _cosmosService.GetMetadataRecordByAuthorAndUri(user, uri);
             return cosmosDocument;
         }
+
     }
 }

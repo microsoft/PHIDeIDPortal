@@ -17,8 +17,8 @@ namespace PhiDeidPortal.Ui.Pages
     public class IndexModel : PhiDeidPageModelBase
     {
         private readonly ILogger<IndexModel> _logger;
-        public IndexModel(ILogger<IndexModel> logger, IAISearchService indexQueryer, CosmosClient cosmosClient, IConfiguration configRoot)
-            : base(indexQueryer, cosmosClient, configRoot)
+        public IndexModel(ILogger<IndexModel> logger, IAISearchService indexQueryer, CosmosClient cosmosClient, Services.IAuthorizationService authorizationService)
+            : base(indexQueryer, cosmosClient, authorizationService)
         {
             _logger = logger;
         }

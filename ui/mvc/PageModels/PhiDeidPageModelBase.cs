@@ -23,13 +23,13 @@ namespace PhiDeidPortal.Ui.PageModels
 
         private readonly IAISearchService _indexQueryer;
         private readonly CosmosClient _cosmosClient;
-        private readonly IConfigurationRoot _configuration;
+        private readonly IAuthorizationService _authService;
 
-        public PhiDeidPageModelBase(IAISearchService indexQueryer, CosmosClient cosmosClient, IConfiguration configRoot)
+        public PhiDeidPageModelBase(IAISearchService indexQueryer, CosmosClient cosmosClient, IAuthorizationService authService)
         {
             _indexQueryer = indexQueryer;
             _cosmosClient = cosmosClient;
-            _configuration = (IConfigurationRoot)configRoot;
+            _authService = authService;
         }
         public async Task DoCounts()
         {
@@ -51,14 +51,8 @@ namespace PhiDeidPortal.Ui.PageModels
             DeniedCount = _cosmosResults.Count(x => x.Status == 5);
         }
 
-        public bool IsAuthorized
-        {
-            get
-            {
-                var userGroupClaim = User.Claims.FirstOrDefault(c => c.Type == "groups" && c.Value == _configuration.GetValue<string>("GroupClaimAdminId"));
-                return userGroupClaim != null;
-            }
-        }
+        public bool IsAuthorized => _authService.Authorize(User);
+        
         public async Task Query(string filter, string searchString)
         {
             DocumentSearchResults = await _indexQueryer.Query(filter, searchString);

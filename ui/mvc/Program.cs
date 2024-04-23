@@ -79,6 +79,12 @@ namespace PhiDeidPortal.Ui
                 return indexQueryer;
             });
 
+            builder.Services.AddSingleton<Services.IAuthorizationService, AuthorizationService>(x =>
+            {
+                var authorizationService = new AuthorizationService(builder.Configuration);
+                return authorizationService;
+            });
+
             // Use a Singleton instance of the SocketsHttpHandler, which you can share across any HttpClient in your application
             SocketsHttpHandler socketsHttpHandler = new SocketsHttpHandler();
             // Customize this value based on desired DNS refresh timer

@@ -18,8 +18,8 @@ namespace PhiDeidPortal.Ui.Pages
         private readonly ILogger<ReviewModel> _logger;
         private readonly ICosmosService _cosmosService;
 
-        public ReviewModel(ILogger<ReviewModel> logger, IAISearchService indexQueryer, CosmosClient cosmosClient, IConfiguration configRoot)
-            : base(indexQueryer, cosmosClient, configRoot)
+        public ReviewModel(ILogger<ReviewModel> logger, IAISearchService indexQueryer, CosmosClient cosmosClient, IConfiguration configRoot, Services.IAuthorizationService authorizationService)
+            : base(indexQueryer, cosmosClient, authorizationService)
         {
             _logger = logger;
             _cosmosService = new CosmosService(cosmosClient, configRoot);
