@@ -1,4 +1,5 @@
-﻿using Azure.Identity;
+﻿using Azure;
+using Azure.Identity;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
@@ -42,6 +43,17 @@ namespace PhiDeidPortal.Ui.Services
             var blobStream = await docBlobClient.OpenReadAsync();
 
             return blobStream;
+        }
+
+        public async Task<Response<bool>> DeleteDocumentAsync(string containerName, string uri)
+        {
+            string blobName = $"{Path.GetFileName(uri)}";
+            
+            var docBlobClient = _blobServiceClient
+                .GetBlobContainerClient(containerName)
+                .GetBlobClient(blobName);
+            
+            return await docBlobClient.DeleteIfExistsAsync();
         }
 
         public async Task<Uri> GetSasUri(string containerName, string fileName)

@@ -17,8 +17,8 @@ namespace PhiDeidPortal.Ui.Pages
     {
         private readonly ILogger<UnprocessedModel> _logger;
 
-        public UnprocessedModel(ILogger<UnprocessedModel> logger, IAISearchService indexQueryer, CosmosClient cosmosClient, IConfiguration configRoot)
-            : base(indexQueryer, cosmosClient, configRoot)
+        public UnprocessedModel(ILogger<UnprocessedModel> logger, IAISearchService indexQueryer, CosmosClient cosmosClient, Services.IAuthorizationService authorizationService)
+            : base(indexQueryer, cosmosClient, authorizationService)
         {
             _logger = logger;
         }

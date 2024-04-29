@@ -1,4 +1,5 @@
 ﻿
+using Azure;
 using Microsoft.AspNetCore.Mvc;
 
 namespace PhiDeidPortal.Ui.Services
@@ -10,5 +11,6 @@ namespace PhiDeidPortal.Ui.Services
         Task<Stream> GetDocumentStreamAsync(string containerName, string fileName);
 
         Task<Uri> GetSasUri(string containerName, string fileName);
+        Task<Response<bool>> DeleteDocumentAsync(string containerName, string uri);
     }
 }

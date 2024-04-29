@@ -23,8 +23,8 @@ namespace PhiDeidPortal.Ui.Pages
         private string _cosmosDbName = "";
         private string _cosmosContainerName = "";
 
-        public JustificationModel(ILogger<JustificationModel> logger, IAISearchService indexQueryer, CosmosClient cosmosClient, IConfiguration configRoot, IBlobService blobService)
-            : base(indexQueryer, cosmosClient, configRoot)
+        public JustificationModel(ILogger<JustificationModel> logger, IAISearchService indexQueryer, CosmosClient cosmosClient, IConfiguration configRoot, Services.IAuthorizationService authorizationService, IBlobService blobService)
+            : base(indexQueryer, cosmosClient, authorizationService)
         {
             _logger = logger;
             _cosmosClient = cosmosClient;

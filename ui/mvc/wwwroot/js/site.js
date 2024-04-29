@@ -73,12 +73,12 @@ phideid.ui = (function () {
 
         submitUpload(formElem) {      
 
-            phideid.ui.showLoadingIndicator();
             $(".upload-error").hide();
             $(".upload-error-2").hide();
 
             var fileInput = $(formElem).children("input:file");
             if (!fileInput || !fileInput[0] || !fileInput[0].files || !fileInput[0].files[0]) return;
+            phideid.ui.showLoadingIndicator();
             var file = fileInput[0].files[0];
             var allowedExtensions = [".pdf", ".csv", ".json", ".xls", ".xlsx", ".doc", ".docx"];
             var fileExtension = file.name.split(".").pop().toLowerCase();
@@ -177,10 +177,11 @@ phideid.ui = (function () {
             return false;
         },
 
-        submitDocumentJustification(id, comment) {
+        submitDocumentJustification(id, uri, comment) {
             var formData = {};
             formData.key = id;
-            formData.justificationtext = comment;
+            formData.uri = uri;
+            formData.comment = comment;
 
             phideid.ui.showLoadingIndicator();
 
@@ -201,10 +202,11 @@ phideid.ui = (function () {
             });
         },
 
-        updateDocumentStatus(id, status) {
+        updateDocumentStatus(id, uri, status) {
             var formData = {};
             formData.key = id;
-
+            formData.Uri = uri;
+            
             var url = '';
 
             if (status === 4) {
@@ -233,35 +235,11 @@ phideid.ui = (function () {
             });
         },
 
-        resetDocument(id, comment) {
+        deleteDocument(id, uri) {
 
             var formData = {};
             formData.key = id;
-            formData.message = comment;
-
-            phideid.ui.showLoadingIndicator();
-            
-            $.ajax({
-                url: '/api/documents/reset',
-                type: 'POST',
-                data: JSON.stringify(formData),
-                contentType: 'application/json',
-                success: function (data) {
-                    phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("Document updated.");
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("There was an error updating the document: XMLHttpRequest.responseText. Please try again.");
-                }
-
-            });
-        },
-
-        deleteDocument(id) {
-
-            var formData = {};
-            formData.key = id;
+            formData.uri = uri;
 
             phideid.ui.showLoadingIndicator();
 
@@ -285,7 +263,6 @@ phideid.ui = (function () {
         downloadFile(filename) {
             window.open("/api/documents/" + filename, "_blank");
         }
-
     };
 
 
@@ -304,9 +281,9 @@ $(document).ready(function () {
     $('#uploadTagEntry').bind('keypress', function (e) { phideid.ui.preventNonAlphaNumericKeys(e); });
     $(".search-row .search-button").bind("click", function () { phideid.ui.search() });
     $(".submit-justification-text").bind("keyup", function (e) { var isValid = phideid.ui.checkInputLength($(this), 3); var btn = $(this).parents(".row").find(".submit-justification-button"); if (isValid) { $(btn).removeAttr("disabled"); } else { $(btn).attr("disabled", "disabled"); } });
-    $(".submit-justification-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); var file = $(this).attr("data-href"); phideid.ui.submitDocumentJustification(file, comment); });
-    $(".approve-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); var file = $(this).attr("data-href"); phideid.ui.updateDocumentStatus(file, 4); });
-    $(".deny-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); var file = $(this).attr("data-href"); phideid.ui.updateDocumentStatus(file, 5); });
-    $(".delete-button").bind("click", function () { var id = $(this).parent().attr("data-id"); phideid.ui.deleteDocument(id); });
+    $(".submit-justification-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); var uri = $(this).attr("data-href"); phideid.ui.submitDocumentJustification(id, uri, comment); });
+    $(".approve-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); var uri = $(this).attr("data-href"); phideid.ui.updateDocumentStatus(id, uri, 4); });
+    $(".deny-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); var uri = $(this).attr("data-href"); phideid.ui.updateDocumentStatus(id, uri, 5); });
+    $(".delete-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var uri = $(this).attr("data-href"); phideid.ui.deleteDocument(id, uri); });
     $(".download-button").bind("click", function () { var file = $(this).attr("data-href"); phideid.ui.downloadFile(file); });
 });

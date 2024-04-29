@@ -67,18 +67,26 @@ namespace AISearch.CustomFunctions
                             Uri = record.Data.Uri, 
                             FileName = record.Data.Uri.Split('/').Last(),
                             Status = record.Data.Status,
+                            JustificationText = String.Empty,
                             Author = "N/A",
                             LastIndexed = DateTime.UtcNow,
                             OrganizationalMetadata = []                          
                         };
                     }
 
+                    var status = record.Data.Status;
+
                     // If yes, update the status in the Cosmos DB record if it is in status = 1 TODO: discuss
                     if (int.Parse(cosmosRecord.Status) == (int)DeidStatus.Uploaded && int.Parse(record.Data.Status) > (int)DeidStatus.Uploaded)
                     {
-                        cosmosRecord.Status = record.Data.Status;
-                        cosmosRecord.LastIndexed = DateTime.UtcNow;
+                        cosmosRecord.Status = status;
                     }
+                    else 
+                    {
+                        status = cosmosRecord.Status;
+                    }
+
+                    cosmosRecord.LastIndexed = DateTime.UtcNow;
 
                     // Update status on the Cosmos DB record
                     await _cosmosDBService.UpsertItemAsync(cosmosRecord);
@@ -86,7 +94,7 @@ namespace AISearch.CustomFunctions
                     responseRecord.Data = new MetadataSyncOutputRecord.OutputRecordData()
                     {
                             Author = cosmosRecord.Author,
-                            Status = int.Parse(record.Data.Status),
+                            Status = int.Parse(status),
                             OrganizationalMetadata = cosmosRecord.OrganizationalMetadata
                     };
 

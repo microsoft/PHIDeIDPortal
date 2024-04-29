@@ -7,6 +7,7 @@
         int Status,
         string Author,
         string[] OrganizationalMetadata,
-        string JustificationText
+        string JustificationText,
+        DateTime LastIndexed
     );
 }

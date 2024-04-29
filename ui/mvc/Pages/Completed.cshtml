@@ -1,7 +1,7 @@
 ﻿@page
 @model CompletedModel
 @{
-    ViewData["Title"] = "Completed";
+    ViewData["Title"] = "Approved";
     int i = 0;
 }
 
@@ -28,10 +28,9 @@
                 <td style="vertical-align: top;" class="redacted-content-td">
                     <div class="content">@redactedSummary</div>
                     <div style="padding: 0 !important; margin-top: 8px;">
-                        <div>
-                            <button class="btn btn-success" type="button"><i class="bi bi-check-lg"></i> Approved (TODO)</button>
-                            <button class="btn btn-danger" type="button"><i class="bi bi-x-lg"></i> Denied (TODO)</button>
-                            <button class="btn btn-secondary" type="button"><i class="bi bi-download"></i> Download (TODO)</button>
+                        <div data-id="@result.Document["id"]">
+                            <button class="btn btn-secondary download-button" type="button" id="download-button" data-href='@result.Document["metadata_storage_name"]'><i class="bi bi-download"></i> Download</button>
+                            <button class="btn btn-danger delete-button" type="button" data-href='@result.Document["metadata_storage_path"]'><i class="bi bi-x-lg"></i> Delete</button>
                         </div>
                     </div>
                 </td>
@@ -50,3 +49,4 @@
             i++;
         }
     </tbody>
+</table>
