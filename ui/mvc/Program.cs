@@ -66,7 +66,7 @@ namespace PhiDeidPortal.Ui
             {
                 return blobServiceClient;
             });
-            
+
             builder.Services.AddSingleton<IBlobService, BlobService>(x =>
             {
                 var blobService = new BlobService(blobServiceClient);
@@ -90,8 +90,16 @@ namespace PhiDeidPortal.Ui
             // Customize this value based on desired DNS refresh timer
             socketsHttpHandler.PooledConnectionLifetime = TimeSpan.FromMinutes(5);
 
+            var connectionModeConfig = builder.Configuration.GetSection("CosmosDb")["ConnectionMode"];
+            ConnectionMode connectionMode = ConnectionMode.Gateway;
+            if (null != connectionModeConfig)
+            {
+                connectionMode = (ConnectionMode)Enum.Parse(typeof(ConnectionMode), connectionModeConfig, ignoreCase: true);
+            }
+
             CosmosClientOptions cosmosClientOptions = new CosmosClientOptions()
             {
+                ConnectionMode = connectionMode,
                 // Pass your customized SocketHttpHandler to be used by the CosmosClient
                 // Make sure `disposeHandler` is `false`
                 HttpClientFactory = () => new HttpClient(socketsHttpHandler, disposeHandler: false)
@@ -103,8 +111,8 @@ namespace PhiDeidPortal.Ui
             CosmosClient cosmosClient = new CosmosClient(cosmosConnectionString, cosmosClientOptions);
 
             builder.Services.AddSingleton(x =>
-            { 
-                return cosmosClient; 
+            {
+                return cosmosClient;
             });
 
             //ICosmosService
