@@ -108,9 +108,9 @@ namespace PhiDeidPortal.Ui.Controllers
         {
             // todo update cosmos with document.Id and document.Message
             var reset = await _searchService.ResetDocument(document.Key);
-            if (!reset) return BadRequest("Reset document failed.");
+            if (!reset.IsSuccess) return BadRequest($"Reset document failed. Code {reset.Code}");
             var reindex = await _searchService.RunIndexer(String.Empty);
-            if (!reindex) return BadRequest("Reindex failed.");
+            if (!reindex.IsSuccess) return BadRequest($"Reindex failed. Code {reindex.Code}");
 
             return Ok();
         }
@@ -122,11 +122,23 @@ namespace PhiDeidPortal.Ui.Controllers
             var cosmosDocument = GetMetadataRecordByUri(document.Uri);
             if (cosmosDocument is null) return BadRequest("Document not found for the given author.");
             var deleteBlob = await _blobService.DeleteDocumentAsync(_containerName, document.Uri);
-            if (!deleteBlob.Value) return BadRequest("Reset document failed - Storage.");
+            if (!deleteBlob.IsSuccess) return BadRequest("Delete document failed - Storage (1).");
             var deleteCosmos = await _cosmosService.DeleteMetadataRecord(cosmosDocument);
-            if (deleteCosmos.StatusCode != HttpStatusCode.NoContent) return BadRequest("Reset document failed - Cosmos.");
+            if (!deleteCosmos.IsSuccess) return BadRequest("Delete document failed - Cosmos (2).");
             var deleteIndex = await _searchService.DeleteDocument(document.Key);
-            if (!deleteIndex) return BadRequest("Reset document failed - Index.");
+            if (!deleteIndex.IsSuccess) return BadRequest("Delete document failed - Index (3).");
+
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("api/documents/deletefromsearchindex")]
+        public async Task<IActionResult> DeleteFromSearchIndex(DeleteDocumentRequestEntity document)
+        {
+            // Admins only
+            if (!_authorizationService.Authorize(User)) return Unauthorized("Unauthorized. Please request access to the app administrator group.");
+            var deleteIndex = await _searchService.DeleteDocument(document.Key);
+            if (!deleteIndex.IsSuccess) return BadRequest("Delete document failed.");
 
             return Ok();
         }
@@ -153,9 +165,9 @@ namespace PhiDeidPortal.Ui.Controllers
 
             // todo update cosmos with document.Id and document.Message
             var reset = await _searchService.ResetDocument(document.Key);
-            if (!reset) return BadRequest("Reset document failed.");
+            if (!reset.IsSuccess) return BadRequest($"Reset document failed. Code {reset.Code}");
             var reindex = await _searchService.RunIndexer(String.Empty);
-            if (!reindex) return BadRequest("Reindex failed.");
+            if (!reindex.IsSuccess) return BadRequest($"Reindex failed. Code {reindex.Code}");
 
             return Ok();
         }
@@ -182,9 +194,9 @@ namespace PhiDeidPortal.Ui.Controllers
 
             // todo update cosmos with document.Id and document.Message
             var reset = await _searchService.ResetDocument(document.Key);
-            if (!reset) return BadRequest("Reset document failed.");
+            if (!reset.IsSuccess) return BadRequest($"Reset document failed. Code {reset.Code}");
             var reindex = await _searchService.RunIndexer(String.Empty);
-            if (!reindex) return BadRequest("Reindex failed.");
+            if (!reindex.IsSuccess) return BadRequest($"Reindex failed. Code {reindex.Code}");
 
             return Ok();
         }
@@ -210,9 +222,9 @@ namespace PhiDeidPortal.Ui.Controllers
             await _cosmosService.UpsertMetadataRecord(newMetadataRecord);
 
             var reset = await _searchService.ResetDocument(document.Key);
-            if (!reset) return BadRequest("Reset document failed.");
+            if (!reset.IsSuccess) return BadRequest($"Reset document failed. Code {reset.Code}");
             var reindex = await _searchService.RunIndexer(String.Empty);
-            if (!reindex) return BadRequest("Reindex failed.");
+            if (!reindex.IsSuccess) return BadRequest($"Reindex failed. Code {reindex.Code}");
 
             return Ok();
         }
