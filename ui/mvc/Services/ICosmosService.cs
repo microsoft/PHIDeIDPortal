@@ -8,7 +8,7 @@ namespace PhiDeidPortal.Ui.Services
         Task<ItemResponse<MetadataRecord>> UpsertMetadataRecord(MetadataRecord record);
         MetadataRecord? GetMetadataRecordByUri(string uri);
         MetadataRecord? GetMetadataRecordByAuthorAndUri(string author, string uri);
-        Task<ItemResponse<MetadataRecord>> DeleteMetadataRecord(MetadataRecord document);
+        Task<ServiceResponse> DeleteMetadataRecord(MetadataRecord document);
     }
 
 }

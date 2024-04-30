@@ -121,7 +121,7 @@ phideid.ui = (function () {
                     phideid.ui.showToast("Document uploaded.");
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    $(".upload-error-2").html("There was an error uploading the file: " + XMLHttpRequest.responseText);
+                    $(".upload-error-2").html(`There was an error uploading the document: ${XMLHttpRequest.responseText}`);
                     $(".upload-error-2").show();
                     phideid.ui.hideLoadingIndicator();
                 }
@@ -196,7 +196,7 @@ phideid.ui = (function () {
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("There was an error updating the document: XMLHttpRequest.responseText. Please try again.");
+                    phideid.ui.showToast(`There was an error updating the document: ${XMLHttpRequest.responseText}`);
                 }
 
             });
@@ -229,22 +229,24 @@ phideid.ui = (function () {
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("There was an error updating the document: XMLHttpRequest.responseText. Please try again.");
+                    phideid.ui.showToast(`There was an error updating the document: ${XMLHttpRequest.responseText}`);
                 }
 
             });
         },
 
-        deleteDocument(id, uri) {
+        deleteDocument(id, uri, indexOnly) {
 
             var formData = {};
             formData.key = id;
             formData.uri = uri;
 
+            var endpoint = indexOnly ? '/api/documents/deletefromsearchindex' : '/api/documents/delete';
+
             phideid.ui.showLoadingIndicator();
 
             $.ajax({
-                url: '/api/documents/delete',
+                url: endpoint,
                 type: 'POST',
                 data: JSON.stringify(formData),
                 contentType: 'application/json',
@@ -254,9 +256,9 @@ phideid.ui = (function () {
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("There was an error deleting the document: XMLHttpRequest.responseText. Please try again.");
+                    phideid.ui.showToast(`There was an error deleting the document: ${XMLHttpRequest.responseText}`);
                 }
-
+                
             });
         },
 

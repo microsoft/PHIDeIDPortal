@@ -3,6 +3,7 @@ using Azure;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
 using static System.Net.WebRequestMethods;
+using System.Net;
 
 namespace PhiDeidPortal.Ui.Services
 {
@@ -60,7 +61,7 @@ namespace PhiDeidPortal.Ui.Services
             return response.GetResults();
         }
 
-        public async Task<bool> ResetDocument(string key)
+        public async Task<ServiceResponse> ResetDocument(string key)
         {
             // Reset document is in preview.
             var uri = $"{_searchUri}/indexers/{_defaultIndexerName}/resetdocs?api-version=2020-06-30-Preview";
@@ -69,22 +70,20 @@ namespace PhiDeidPortal.Ui.Services
             _httpClient.DefaultRequestHeaders.Remove("contentType");
             _httpClient.DefaultRequestHeaders.Add("contentType", "application/json");
             var response = await _httpClient.PostAsJsonAsync<ResetDocumentRequestEntity>(uri, new ResetDocumentRequestEntity() { DocumentKeys = [key] }, CancellationToken.None);
-            if (response.StatusCode == System.Net.HttpStatusCode.NoContent) return true;
-            return false;
+            return new ServiceResponse() { IsSuccess = (HttpStatusCode)response.StatusCode == HttpStatusCode.NoContent, Code = (HttpStatusCode)response.StatusCode };
         }
 
-        public async Task<bool> DeleteDocument(string key)
+        public async Task<ServiceResponse> DeleteDocument(string key)
         {
             var response = await _searchClient.DeleteDocumentsAsync("id", new List<string>() { key });
-            return true;
+            return new ServiceResponse() { IsSuccess = (HttpStatusCode)response.GetRawResponse().Status == HttpStatusCode.OK, Code = (HttpStatusCode)response.GetRawResponse().Status };
         }
 
-        public async Task<bool> RunIndexer(string name)
+        public async Task<ServiceResponse> RunIndexer(string name)
         {
             if (String.IsNullOrEmpty(name)) { name = _defaultIndexerName; }
             var response = await _indexerClient.RunIndexerAsync(name);
-            if (response.IsError) return false;
-            return true;
+            return new ServiceResponse() { IsSuccess = !response.IsError, Code = (HttpStatusCode)response.Status };
         }
     }
 

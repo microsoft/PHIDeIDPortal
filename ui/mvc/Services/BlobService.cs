@@ -4,6 +4,7 @@ using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 using static System.Reflection.Metadata.BlobBuilder;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -45,15 +46,19 @@ namespace PhiDeidPortal.Ui.Services
             return blobStream;
         }
 
-        public async Task<Response<bool>> DeleteDocumentAsync(string containerName, string uri)
+        public async Task<ServiceResponse> DeleteDocumentAsync(string containerName, string uri)
         {
-            string blobName = $"{Path.GetFileName(uri)}";
+            string blobName = $"{Path.GetFileName(uri)}";           
             
             var docBlobClient = _blobServiceClient
                 .GetBlobContainerClient(containerName)
                 .GetBlobClient(blobName);
-            
-            return await docBlobClient.DeleteIfExistsAsync();
+
+            var exists = docBlobClient.Exists();
+            if (!exists) { return new ServiceResponse() { IsSuccess = true, Code = HttpStatusCode.NotFound, Message = "Blob not found" }; } 
+
+            var delete = await docBlobClient.DeleteIfExistsAsync();
+            return new ServiceResponse() { IsSuccess = delete.Value, Code = delete.Value == true ? HttpStatusCode.OK : HttpStatusCode.BadRequest, Message = delete.Value == true ? "Blob deleted" : "Blob not deleted" };
         }
 
         public async Task<Uri> GetSasUri(string containerName, string fileName)

@@ -7,8 +7,8 @@ namespace PhiDeidPortal.Ui.Services
     {
         Task<Pageable<SearchResult<SearchDocument>>> Query(string filter, string searchString = "*");
         Task<Pageable<SearchResult<SearchDocument>>> Query(string searchString = "*");
-        Task<bool> ResetDocument(string key);
-        Task<bool> RunIndexer(string name);
-        Task<bool> DeleteDocument(string key);
+        Task<ServiceResponse> ResetDocument(string key);
+        Task<ServiceResponse> RunIndexer(string name);
+        Task<ServiceResponse> DeleteDocument(string key);
     }
 }

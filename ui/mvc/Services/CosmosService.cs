@@ -1,6 +1,7 @@
 ﻿using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
+using System.Net;
 
 namespace PhiDeidPortal.Ui.Services
 {
@@ -74,20 +75,20 @@ namespace PhiDeidPortal.Ui.Services
                 .GetDatabase(_cosmosDbName)
                 .GetContainer(_cosmosContainerName)
                 .GetItemLinqQueryable<MetadataRecord>(true)
-                .Where(d => d.Author == author && d.Uri == uri)
+                .Where(d => (d.Author == author || d.Author == "N/A") && d.Uri == uri)
                 .FirstOrDefault();
 
             return docRecord;
         }
 
-        public async Task<ItemResponse<MetadataRecord>> DeleteMetadataRecord(MetadataRecord document)
+        public async Task<ServiceResponse> DeleteMetadataRecord(MetadataRecord document)
         {
             var response = await _cosmosClient
                 .GetDatabase(_cosmosDbName)
                 .GetContainer(_cosmosContainerName)
                 .DeleteItemAsync<MetadataRecord>(document.id, new PartitionKey(document.Uri));
 
-            return response;
+            return new ServiceResponse() { IsSuccess = response.StatusCode == HttpStatusCode.NoContent, Code = response.StatusCode };
         }
 
         public async Task<ItemResponse<MetadataRecord>> UpdateMetadataRecord(MetadataRecord document)
