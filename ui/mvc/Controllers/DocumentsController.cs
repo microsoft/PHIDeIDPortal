@@ -24,6 +24,7 @@ namespace PhiDeidPortal.Ui.Controllers
         private readonly IBlobService _blobService;
         private readonly ICosmosService _cosmosService;
         private readonly IConfigurationSection _storageConfiguration;
+        private readonly IConfigurationSection _searchConfiguration;
         private readonly IAISearchService _searchService;
         private readonly Services.IAuthorizationService _authorizationService;
 
@@ -34,6 +35,7 @@ namespace PhiDeidPortal.Ui.Controllers
         {
             _blobService = blobService;
             _storageConfiguration = configuration.GetSection("StorageAccount");
+            _searchConfiguration = configuration.GetSection("SearchService");
             _cosmosService = cosmosService;
             _searchService = searchService;
             _authorizationService = authorizationService;
@@ -73,10 +75,11 @@ namespace PhiDeidPortal.Ui.Controllers
             try
             {
                 uri = await _blobService.UploadDocumentAsync(file, _containerName);
+                if (String.IsNullOrWhiteSpace(uri)) { throw new Exception(); }
             }
-            catch (Exception ex)
+            catch
             {
-                return BadRequest($"Blob storage upsert failed: {Environment.NewLine} {ex.Message}");
+                return StatusCode(500, "Error uploading document to the Storage Account.");
             }
 
             try
@@ -92,12 +95,16 @@ namespace PhiDeidPortal.Ui.Controllers
                 JustificationText: ""
                 );
 
-                await _cosmosService.UpsertMetadataRecord(metadataRecord);
+                var upload = await _cosmosService.UpsertMetadataRecord(metadataRecord);
+                if (upload.StatusCode !=  HttpStatusCode.Created) { throw new Exception(); }
             }
-            catch (Exception ex)
+            catch
             {
-                return BadRequest($"Cosmos upsert failed: {Environment.NewLine} {ex.Message}");
+                return BadRequest($"Error uploading document metadata to Cosmos DB.");
             }
+
+            var reupload = _searchConfiguration["ReindexOnUpload"] ?? "false";
+            if (reupload.Equals("true", StringComparison.CurrentCultureIgnoreCase)) { await _searchService.RunIndexer(String.Empty); }
 
             return Ok("Document uploaded successfully");
         }
@@ -139,6 +146,18 @@ namespace PhiDeidPortal.Ui.Controllers
             if (!_authorizationService.Authorize(User)) return Unauthorized("Unauthorized. Please request access to the app administrator group.");
             var deleteIndex = await _searchService.DeleteDocument(document.Key);
             if (!deleteIndex.IsSuccess) return BadRequest("Delete document failed.");
+
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("api/documents/reindex")]
+        public async Task<IActionResult> Reindex()
+        {
+            // Admins only
+            if (!_authorizationService.Authorize(User)) return Unauthorized("Unauthorized. Please request access to the app administrator group.");
+            var reindex = await _searchService.RunIndexer(String.Empty);
+            if (!reindex.IsSuccess) return BadRequest("Delete document failed.");
 
             return Ok();
         }
