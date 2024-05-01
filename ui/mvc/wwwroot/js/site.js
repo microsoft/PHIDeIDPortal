@@ -258,7 +258,25 @@ phideid.ui = (function () {
                     phideid.ui.hideLoadingIndicator();
                     phideid.ui.showToast(`There was an error deleting the document: ${XMLHttpRequest.responseText}`);
                 }
-                
+
+            });
+        },
+
+        reindex() {
+            phideid.ui.showLoadingIndicator();
+
+            $.ajax({
+                url: '/api/documents/reindex',
+                type: 'POST',
+                success: function (data) {
+                    phideid.ui.hideLoadingIndicator();
+                    phideid.ui.showToast("Documents reindexed.");
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    phideid.ui.hideLoadingIndicator();
+                    phideid.ui.showToast(`There was an error reindexing the documents: ${XMLHttpRequest.responseText}`);
+                }
+
             });
         },
 
