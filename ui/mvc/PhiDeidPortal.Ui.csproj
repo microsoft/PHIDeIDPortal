@@ -21,7 +21,7 @@
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.38.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.3" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.3" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.60.3" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
     <PackageReference Include="Microsoft.Identity.Web" Version="2.17.2" />
     <PackageReference Include="Microsoft.Identity.Web.UI" Version="2.17.2" />
   </ItemGroup>  
