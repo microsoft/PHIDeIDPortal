@@ -118,10 +118,10 @@ phideid.ui = (function () {
                 success: function (data) {
                     $(".loading").hide();
                     $("#uploadDialog").modal('hide');
-                    phideid.ui.showToast("Document uploaded.");
+                    phideid.ui.showToast("Document uploaded.",false,true);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    $(".upload-error-2").html(`There was an error uploading the document: ${XMLHttpRequest.responseText}`);
+                    $(".upload-error-2").html(`There was an error uploading the document: ${XMLHttpRequest.responseText}`,true,false);
                     $(".upload-error-2").show();
                     phideid.ui.hideLoadingIndicator();
                 }
@@ -164,10 +164,27 @@ phideid.ui = (function () {
             location.href = location.pathname + query;
         },
 
-        showToast(message) {
+        showToast(message,isError,showReload) {
             const toastElem = bootstrap.Toast.getOrCreateInstance(document.getElementById("toast"));
+            if (showReload) { message += "&nbsp;<a id='toastreload' href='javascript:phideid.ui.toastReload();'>Reload</a>"; }
+            if (isError) { message = "<i class='bi bi-exclamation-triangle'></i> " + message; }
+            else { message = "<i class='bi bi-info-circle'></i> " + message; }
+            
             $(".toast-body").html(message);
             toastElem.show();
+        },
+
+        toastReload() {
+            $("#toastreload").attr('href', '#');
+            $("#toastreload").html("Reloading in 5 sec ...");
+            var count = 0;
+            var interval = setInterval(function () {
+                $("#toastreload").html(`Reloading in ${(4 - count++)} sec ...`);
+                if (count >= 5) {
+                    clearInterval(interval);
+                    location.reload();
+                }
+            },1000);
         },
 
         checkInputLength(elem, minLength) {
@@ -192,11 +209,14 @@ phideid.ui = (function () {
                 contentType: 'application/json',
                 success: function (data) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("Document updated.");
+                    phideid.ui.showToast("Document updated.",false,true);
+                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast(`There was an error updating the document: ${XMLHttpRequest.responseText}`);
+                    var reload = (XMLHttpRequest.status === 409);
+                    phideid.ui.showToast(`There was an error updating the document: ${XMLHttpRequest.responseText}`,true,reload);
+                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 }
 
             });
@@ -225,11 +245,14 @@ phideid.ui = (function () {
                 contentType: 'application/json',
                 success: function (data) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("Document updated.");
+                    phideid.ui.showToast("Document updated.",false,true);
+                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast(`There was an error updating the document: ${XMLHttpRequest.responseText}`);
+                    var reload = (XMLHttpRequest.status === 409);
+                    phideid.ui.showToast(`There was an error updating the document: ${XMLHttpRequest.responseText}`,true,reload);
+                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 }
 
             });
@@ -252,11 +275,13 @@ phideid.ui = (function () {
                 contentType: 'application/json',
                 success: function (data) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("Document deleted.");
+                    phideid.ui.showToast("Document deleted.",false,true);
+                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast(`There was an error deleting the document: ${XMLHttpRequest.responseText}`);
+                    phideid.ui.showToast(`There was an error deleting the document: ${XMLHttpRequest.responseText}`,true,false);
+                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 }
 
             });
@@ -270,14 +295,18 @@ phideid.ui = (function () {
                 type: 'POST',
                 success: function (data) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("Documents reindexed.");
+                    phideid.ui.showToast("Documents reindexed.",false,true);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast(`There was an error reindexing the documents: ${XMLHttpRequest.responseText}`);
+                    phideid.ui.showToast(`There was an error reindexing the documents: ${XMLHttpRequest.responseText}`,true,false);
                 }
 
             });
+        },
+
+        disableButtonGroup(elem) {
+            elem.find("input[type='button'], button").attr("disabled", "disabled");
         },
 
         downloadFile(filename) {

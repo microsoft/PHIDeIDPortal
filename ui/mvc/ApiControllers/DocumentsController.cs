@@ -14,6 +14,7 @@ using PhiDeidPortal.Ui.Common;
 using System;
 using System.Net;
 using System.Reflection.Metadata;
+using System.Xml.Linq;
 
 namespace PhiDeidPortal.Ui.Controllers
 {
@@ -92,6 +93,7 @@ namespace PhiDeidPortal.Ui.Controllers
                 Status: 1,
                 OrganizationalMetadata: organizationalMetadata.ToArray(),
                 LastIndexed: DateTime.MinValue,
+                AwaitingIndex: true,
                 JustificationText: ""
                 );
 
@@ -166,52 +168,38 @@ namespace PhiDeidPortal.Ui.Controllers
         [Route("api/documents/approve")]
         public async Task<IActionResult> Approve(StatusChangeRequestEntity document)
         {
-            var existingMetadataRecord = GetMetadataRecordByUri(document.Uri, true);
-            if (existingMetadataRecord is null) return BadRequest("Document not found for the given approver.");
-
-            MetadataRecord newMetadataRecord = new(
-                id: existingMetadataRecord.id,
-                FileName: existingMetadataRecord.FileName,
-                Uri: existingMetadataRecord.Uri,
-                Author: existingMetadataRecord.Author,
-                Status: (int) DeidStatus.Approved,
-                OrganizationalMetadata: existingMetadataRecord.OrganizationalMetadata,
-                LastIndexed: existingMetadataRecord.LastIndexed,
-                JustificationText: existingMetadataRecord.JustificationText
-                );
-            
-            await _cosmosService.UpsertMetadataRecord(newMetadataRecord);
-
-            // todo update cosmos with document.Id and document.Message
-            var reset = await _searchService.ResetDocument(document.Key);
-            if (!reset.IsSuccess) return BadRequest($"Reset document failed. Code {reset.Code}");
-            var reindex = await _searchService.RunIndexer(String.Empty);
-            if (!reindex.IsSuccess) return BadRequest($"Reindex failed. Code {reindex.Code}");
-
-            return Ok();
+            return await HandleApproval(document, DeidStatus.Approved);
         }
-
+        
         [HttpPost]
         [Route("api/documents/deny")]
         public async Task<IActionResult> Deny(StatusChangeRequestEntity document)
         {
-            var existingMetadataRecord = GetMetadataRecordByUri(document.Uri, true);    
-            if (existingMetadataRecord is null) return BadRequest("Document not found for the given approver.");
+            return await HandleApproval(document, DeidStatus.Denied);
+        }
 
-            MetadataRecord newMetadataRecord = new(
-                id: existingMetadataRecord.id,
-                FileName: existingMetadataRecord.FileName,
-                Uri: existingMetadataRecord.Uri,
-                Author: existingMetadataRecord.Author,
-                Status: (int)DeidStatus.Denied,
-                OrganizationalMetadata: existingMetadataRecord.OrganizationalMetadata,
-                LastIndexed: existingMetadataRecord.LastIndexed,
-                JustificationText: existingMetadataRecord.JustificationText
+        private async Task<IActionResult> HandleApproval(StatusChangeRequestEntity document, DeidStatus status)
+        {
+            var oldRecord = GetMetadataRecordByUri(document.Uri, true);
+            if (oldRecord is null) return BadRequest("Document not found for the given approver.");
+            if (oldRecord.AwaitingIndex) return Conflict("Document is awaiting reindex. Please refresh and try again.");
+            if (oldRecord.Status > 3) return Conflict("Document is awaiting reindex. Please refresh and try again.");
+
+            MetadataRecord newRecord = new(
+                 id: Guid.NewGuid().ToString(),  //oldRecord.id,
+                FileName: oldRecord.FileName,
+                Uri: oldRecord.Uri,
+                Author: oldRecord.Author,
+                Status: (int)status,
+                OrganizationalMetadata: oldRecord.OrganizationalMetadata,
+                LastIndexed: oldRecord.LastIndexed,
+                AwaitingIndex: true,
+                JustificationText: oldRecord.JustificationText
                 );
 
-            await _cosmosService.UpsertMetadataRecord(newMetadataRecord);
-
-            // todo update cosmos with document.Id and document.Message
+            await _cosmosService.DeleteMetadataRecord(oldRecord);
+            await _cosmosService.UpsertMetadataRecord(newRecord);
+            
             var reset = await _searchService.ResetDocument(document.Key);
             if (!reset.IsSuccess) return BadRequest($"Reset document failed. Code {reset.Code}");
             var reindex = await _searchService.RunIndexer(String.Empty);
@@ -224,21 +212,25 @@ namespace PhiDeidPortal.Ui.Controllers
         [Route("api/documents/justify")]
         public async Task<IActionResult> SubmitJustification(StatusChangeRequestEntity document)
         {
-            var existingMetadataRecord = GetMetadataRecordByUri(document.Uri);
-            if (existingMetadataRecord is null) return BadRequest("Document not found for the given author.");
+            var oldRecord = GetMetadataRecordByUri(document.Uri);
+            if (oldRecord is null) return BadRequest("Document not found for the given author.");
+            if (oldRecord.AwaitingIndex) return Conflict("Document is awaiting reindex. Please refresh and try again.");
+            if (oldRecord.Status > 2) return Conflict("Document is awaiting reindex. Please refresh and try again.");
 
-            MetadataRecord newMetadataRecord = new(
-                id: existingMetadataRecord.id,
-                FileName: existingMetadataRecord.FileName,
-                Uri: existingMetadataRecord.Uri,
-                Author: existingMetadataRecord.Author,
+            MetadataRecord newRecord = new(
+                id: Guid.NewGuid().ToString(),  //oldRecord.id,
+                FileName: oldRecord.FileName,
+                Uri: oldRecord.Uri,
+                Author: oldRecord.Author,
                 Status: (int)DeidStatus.JustificationApprovalPending,
-                OrganizationalMetadata: existingMetadataRecord.OrganizationalMetadata,
-                LastIndexed: existingMetadataRecord.LastIndexed,
+                OrganizationalMetadata: oldRecord.OrganizationalMetadata,
+                LastIndexed: oldRecord.LastIndexed,
+                AwaitingIndex: true,
                 JustificationText: document.Comment ??= ""
                 );
 
-            await _cosmosService.UpsertMetadataRecord(newMetadataRecord);
+            await _cosmosService.DeleteMetadataRecord(oldRecord);
+            await _cosmosService.UpsertMetadataRecord(newRecord);
 
             var reset = await _searchService.ResetDocument(document.Key);
             if (!reset.IsSuccess) return BadRequest($"Reset document failed. Code {reset.Code}");

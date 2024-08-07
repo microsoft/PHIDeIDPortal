@@ -8,6 +8,7 @@
         string Author,
         string[] OrganizationalMetadata,
         string JustificationText,
+        bool AwaitingIndex,
         DateTime LastIndexed
     );
 }
