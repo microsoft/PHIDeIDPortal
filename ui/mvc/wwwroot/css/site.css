@@ -237,3 +237,11 @@ td .tagCloudElemPlaceholder {
 .toast {
     background: #222 !important;
 }
+
+.toast-body {
+    font-size: 1.05em;
+}
+
+.toast a {
+    color: #f4f4f4 !important;
+}
