@@ -25,9 +25,7 @@ namespace PhiDeidPortal.Ui.Pages
 
         public async Task OnGet()
         {
-            await base.DoCounts();
-
-
+            await base.DoCounts(Request.Query["v"].ToString().ToLower() == "me");
         }
     }
 }

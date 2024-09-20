@@ -29,6 +29,7 @@ body {
 
 .container {
     min-width: 1150px !important;
+    max-width: 1600px !important;
 }
 
 .navbar-container div.col {
@@ -71,6 +72,10 @@ body {
 
 .tab a {
     font-weight:600;
+}
+
+.date-column {
+    min-width: 180px;
 }
 
 #uploadForm textarea {
@@ -224,7 +229,6 @@ td .tagCloudElemPlaceholder {
 
 .search-button {
     min-width: 120px;
-    width: 100%;
 }
 
 .unauth {
