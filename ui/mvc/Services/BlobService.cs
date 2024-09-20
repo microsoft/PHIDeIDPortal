@@ -19,10 +19,8 @@ namespace PhiDeidPortal.Ui.Services
             _blobServiceClient = blobServiceClient;
         }
 
-        public async Task<string> UploadDocumentAsync(IFormFile file, string containerName)
+        public async Task<string> UploadDocumentAsync(IFormFile file, string containerName, string blobName)
         {
-            string blobName = $"{Path.GetFileName(file.FileName)}";
-
             BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
 
             using (Stream stream = file.OpenReadStream())

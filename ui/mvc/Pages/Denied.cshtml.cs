@@ -25,12 +25,14 @@ namespace PhiDeidPortal.Ui.Pages
 
         public async Task OnGet()
         {
-            await base.DoCounts();
+            var viewQuery = Request.Query["v"].ToString();
+            var searchQuery = Request.Query["q"].ToString();
+
+            await base.DoCounts(viewQuery.ToLower() == "me");
 
             var filter = $"status eq 5";
-
-            var searchString = Request.Query["q"].ToString() ?? "*";
-
+            var searchString = searchQuery ?? "*";
+            if (viewQuery.ToLower() == "me" || !IsAuthorized) { searchString += $"+{User.Identity.Name}"; }
             await Query(filter, searchString);
         }
     }

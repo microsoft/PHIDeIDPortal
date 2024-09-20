@@ -15,6 +15,7 @@ using System;
 using System.Net;
 using System.Reflection.Metadata;
 using System.Xml.Linq;
+using System.Text.RegularExpressions;
 
 namespace PhiDeidPortal.Ui.Controllers
 {
@@ -61,7 +62,7 @@ namespace PhiDeidPortal.Ui.Controllers
                 return BadRequest("No file uploaded");
             }
 
-            string blobName = $"{Path.GetFileName(file.FileName)}";
+            string blobName = Regex.Replace(Path.GetFileName(file.FileName), @"[^a-zA-Z0-9_\-\.]", "");
 
             string tags = this.HttpContext.Request.Form["uploadTags"];
             tags ??= "";
@@ -75,7 +76,7 @@ namespace PhiDeidPortal.Ui.Controllers
             string uri = "";
             try
             {
-                uri = await _blobService.UploadDocumentAsync(file, _containerName);
+                uri = await _blobService.UploadDocumentAsync(file, _containerName, blobName);
                 if (String.IsNullOrWhiteSpace(uri)) { throw new Exception(); }
             }
             catch

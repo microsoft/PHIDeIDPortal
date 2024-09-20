@@ -1,4 +1,5 @@
 ﻿@page
+@using System.Globalization
 @model ReviewModel
 @{
     ViewData["Title"] = "Review";
@@ -11,7 +12,7 @@
                 <tr>
                     <th nowrap>Document</th>
                     <th>Author</th>
-                    <th>LastIndexed</th>
+                    <th>Last Indexed</th>
                     <th nowrap>Redacted Content</th>
                     <th nowrap>Metadata</th>
                 </tr>
@@ -28,12 +29,12 @@
                     <tr class="@(i % 2 == 0 ? "row-even" : "row-odd")">
                         <td style="vertical-align: top;">@result.Document["metadata_storage_name"]</td>
                         <td style="vertical-align: top;">@result.Document["author"].ToString().Split('@')[0]</td>
-                        <td style="vertical-align: top;">
+                        <td style="vertical-align: top;" class="date-column">
                             @{
                                 var lastIndexedString = (result.Document.ContainsKey("lastIndexed") && result.Document["lastIndexed"] is not null) ? result.Document["lastIndexed"] : DateTime.MinValue;
                                 DateTime.TryParse(lastIndexedString.ToString(), out DateTime lastIndexed);
                                 if (lastIndexed == DateTime.MinValue) { <span><i>unindexed</i></span> }
-                                else { <span>@lastIndexed</span> }
+                                else { <span><script type="text/javascript">document.write(moment(moment.utc('@lastIndexed.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)').toDate()).local().format('YYYY-MM-DD hh:mm A'));</script></span> }
                             }
                         </td>
                         <!-- <td style="vertical-align: top;">@result.Document["content"]</td> -->

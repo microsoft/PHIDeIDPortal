@@ -1,4 +1,5 @@
 ﻿@page
+@using System.Globalization
 @model IndexModel
 @{
     ViewData["Title"] = "All Documents";
@@ -26,21 +27,18 @@
                         var enumParsed = DeidStatus.TryParse(result.Status.ToString(), out DeidStatus deidStatus);
                         if (enumParsed)
                         {
-                            @deidStatus
+                                        @deidStatus
                         }
                     }
                 </td>
-                <td style="vertical-align: top;">
+                <td style="vertical-align: top;" class="date-column">
                     @{
                         var lastIndexedString = (result.LastIndexed is not null) ? result.LastIndexed : DateTime.MinValue;
                         DateTime.TryParse(lastIndexedString.ToString(), out DateTime lastIndexed);
-                        if (lastIndexed == DateTime.MinValue)
-                        {
-                            <span><i>unindexed</i></span>
-                        }
+                        if (lastIndexed == DateTime.MinValue) { <span><i>unindexed</i></span> }
                         else
                         {
-                            <span>@lastIndexed</span>
+                            <span><script type="text/javascript">document.write(moment(moment.utc('@lastIndexed.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)').toDate()).local().format('YYYY-MM-DD hh:mm A'));</script></span>
                         }
                     }
                 </td>
