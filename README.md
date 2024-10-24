@@ -37,8 +37,8 @@ Deployment Steps –
   a. **az webapp create** --resource-group _resourcegroup_ --name _webname_ --runtime dotnet:8 --plan _plan2_  
   b. **az resource update** --resource-group resourcegroup --name scm --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --_parent sites/webname_ --set properties.allow=true  
   c. Publish the Web solution to the Web App Service  
-  d. **az webapp identity assign** -g resourcegroup -n _webname_ (results used in e.)
-  e. **az role assignment create** --assignee _systemassignedidentityguid_ --role "Storage Blob Data Contributor" --scope _storageaccountid_ 
+  d. **az webapp identity assign** -g resourcegroup -n _webname_ (results used in e.)  
+  e. **az role assignment create** --assignee _systemassignedidentityguid_ --role "Storage Blob Data Contributor" --scope _storageaccountid_  
   f. **az ad app create** --display-name _appid_ --web-redirect-uris _https://{webname}.azurewebsites.net/signin-oidc_  
   g. Modify App Registration to include Group Claims (modify groupMembershipClaims property)  
   h. Add Entra group to support Admins. Note group name for updating the web app configuration value  
