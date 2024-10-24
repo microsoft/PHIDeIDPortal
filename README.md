@@ -34,7 +34,7 @@ Deployment Steps –
   b. Publish the Azure Function to the Function App Service    
 
 10. Create the Web application for the DeID Web Portal  
-  a. **az webapp create** --resource-group _resourcegroup_ --name _webname_ --runtime dotnet:8 --plan _plan2_ 
+  a. **az webapp create** --resource-group _resourcegroup_ --name _webname_ --runtime dotnet:8 --plan _plan2_  
   b. **az resource update** --resource-group resourcegroup --name scm --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --_parent sites/webname_ --set properties.allow=true  
   c. Publish the Web solution to the Web App Service  
   d. **az webapp identity assign** -g resourcegroup -n _webname_ (results used in e.)
