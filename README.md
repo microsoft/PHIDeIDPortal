@@ -15,33 +15,37 @@ Deployment Steps –
   a. **az storage container create** -n _container_ --account-name _storageaccount_  
   
 4. Create a new Azure AI multi-service resource  
-  a. **az cognitiveservices account create** –name _aiservice_ --resource-group _resourcegroup_ --kind CognitiveServices --sku Standard --yes  
+  a. **az cognitiveservices account create** --name _aiservice_ --location _location_ --resource-group _resourcegroup_ --kind CognitiveServices --sku s0 --yes  
   
 5. Create a new Azure AI Search instance  
   a. **az search service create** --name _searchservice_ --resource-group _resourcegroup_ –sku standard
 
 6.  Create the Cosmos NoSQL database  
-  a. az cosmosdb create --name _cosmosdb_ --resource-group _resourcegroup_ --kind GlobalDocumentDB --locations regionName=EastUS  
-  b. az cosmosdb sql container create -g _resourcegroup_ -a _cosmosaccountname_ -d "deid" -n "metadata" --partition-key-path "/uri"  
+  a. **az cosmosdb create** --name _cosmosdb_ --resource-group _resourcegroup_ --kind GlobalDocumentDB --locations regionName = _location_
+  b. **az cosmosdb sql database create** -g _resourcegroup_ -a _cosmosaccountname_ -n deid --throughput 400 
+  c. **az cosmosdb sql container create** -g _resourcegroup_ -a _cosmosaccountname_ -d deid -n metadata --partition-key-path "/uri"  
   
-7. Create two new App Service Plans – one for the Web application and one for standard Functions  
+8. Create two new App Service Plans – one for the Web application and one for standard Functions  
   a. **az appservice plan create** -g _resourcegroup_ -n _plan1_ --sku S1  
   b. **az appservice plan create** -g _resourcegroup_ -n _plan2_ --sku S1  
   
-8. Create a new Azure Function instance for the metadata sync and custom skill  
-  a. **az functionapp create** --name functionapp --os-type Windows --resource-group _resourcegroup_ --runtime dotnet --storage-account _storageaccount_ --plan _plan1_  
+9. Create a new Azure Function instance for the metadata sync and custom skill  
+  a. **az functionapp create** --resource-group _resourcegroup_ --name _functionappname_ --os-type Windows --runtime dotnet --storage-account _storageaccount_ --plan _plan1_  
   b. Publish the Azure Function to the Function App Service    
 
-9. Create the Web application for the DeID Web Portal  
-  a. az resource update --resource-group resourcegroup --name scm --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --parent sites/{appname} --set properties.allow=true  
-  b. Publish the Web solution to the Web App Service  
-  c. az webapp identity assign -g resourcegroup -n appname  
-  d. az role assignment create --assignee systemassignedidentityguid --role "Storage Blob Data Contributor" --scope storageaccountid  
-  e. az ad app create --display-name DeIdWeb --web-redirect-uris https://{appName}.azurewebsites.net/signin-oidc  
+10. Create the Web application for the DeID Web Portal  
+  a. **az webapp create** --resource-group _resourcegroup_ --name _webappname_ --runtime dotnet:8 --plan _plan2_ 
+  b. **az resource update** --resource-group resourcegroup --name scm --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --parent sites/{appname} --set properties.allow=true  
+  c. Publish the Web solution to the Web App Service  
+  d. **az webapp identity assign** -g resourcegroup -n appname  
+  e. **az role assignment create** --assignee systemassignedidentityguid (from d) --role "Storage Blob Data Contributor" --scope storageaccountid  
+  f. **az ad app create** --display-name DeIdWeb --web-redirect-uris https://{appName}.azurewebsites.net/signin-oidc
+  g. Modify App Registration to include Group Claims (modify groupMembershipClaims property)
+  h. Add Entra group to support Admins. Note group name for updating the web app configuration value
 
-10.	Deploy the metadata sync and custom Function app by configuring the Azure Function to pull from your forked GH repo or by cloning the repo and doing a publish.
-11.	Create the AI Search Index, Custom Skill and Indexer definitions (in that order) using the three JSON configuration files in the search-config folder of the Repo
-12.	Upload documents to the Blob Storage Container created in #3 and ensure the Indexer is running.
+12.	Deploy the metadata sync and custom Function app by configuring the Azure Function to pull from your forked GH repo or by cloning the repo and doing a publish.
+13.	Create the AI Search Index, Custom Skill and Indexer definitions (in that order) using the three JSON configuration files in the search-config folder of the Repo
+14.	Upload documents to the Blob Storage Container created in #3 and ensure the Indexer is running.
 
 This project conforms to the MIT licensing terms. Code is not indended as a complete production-ready solution and no warranty is implied.
 
