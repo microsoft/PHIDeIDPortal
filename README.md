@@ -39,9 +39,9 @@ Deployment Steps –
   c. Publish the Web solution to the Web App Service  
   d. **az webapp identity assign** -g resourcegroup -n appname  
   e. **az role assignment create** --assignee systemassignedidentityguid (from d) --role "Storage Blob Data Contributor" --scope storageaccountid  
-  f. **az ad app create** --display-name DeIdWeb --web-redirect-uris https://{appName}.azurewebsites.net/signin-oidc
-  g. Modify App Registration to include Group Claims (modify groupMembershipClaims property)
-  h. Add Entra group to support Admins. Note group name for updating the web app configuration value
+  f. **az ad app create** --display-name DeIdWeb --web-redirect-uris https://{appName}.azurewebsites.net/signin-oidc  
+  g. Modify App Registration to include Group Claims (modify groupMembershipClaims property)  
+  h. Add Entra group to support Admins. Note group name for updating the web app configuration value  
 
 12.	Deploy the metadata sync and custom Function app by configuring the Azure Function to pull from your forked GH repo or by cloning the repo and doing a publish.
 13.	Create the AI Search Index, Custom Skill and Indexer definitions (in that order) using the three JSON configuration files in the search-config folder of the Repo
