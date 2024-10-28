@@ -38,10 +38,11 @@ Deployment Steps –
   b. **az resource update** --resource-group resourcegroup --name scm --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --_parent sites/webname_ --set properties.allow=true  
   c. Publish the Web solution to the Web App Service  
   d. **az webapp identity assign** -g resourcegroup -n _webname_ (results used in e.)  
-  e. **az role assignment create** --assignee _systemassignedidentityguid_ --role "Storage Blob Data Contributor" --scope _storageaccountid_  
+  e. (Azure managed identity security for Storage) **az role assignment create** --assignee _systemassignedidentityguid_ --role "Storage Blob Data Contributor" --scope _storageaccountid_  
   f. **az ad app create** --display-name _appid_ --web-redirect-uris _https://{webname}.azurewebsites.net/signin-oidc_  
   g. Modify App Registration to include Group Claims (modify groupMembershipClaims property)  
   h. Add Entra group to support Admins. Note group name for updating the web app configuration value  
+  i. (Azure managed identity security for Cosmos) **az cosmosdb sql role assignment create** -g _resourcegroup_ -a _cosmosaccountname_ --role-definition-name "Cosmos DB Built-in Data Contributor" -scope "/" --principal-id _systemassignedidentityguid_
 
 12.	Deploy the metadata sync and custom Function app by configuring the Azure Function to pull from your forked GH repo or by cloning the repo and doing a publish.
 13.	Create the AI Search Index, Custom Skill and Indexer definitions (in that order) using the three JSON configuration files in the search-config folder of the Repo

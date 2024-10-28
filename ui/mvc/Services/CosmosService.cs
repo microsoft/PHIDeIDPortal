@@ -14,7 +14,6 @@ namespace PhiDeidPortal.Ui.Services
         private readonly string _cosmosContainerName;
         private readonly string _cosmosPartitionKey;
 
-
         public CosmosService(CosmosClient cosmosClient, IConfiguration configuration)
         {
             _cosmosClient = cosmosClient;
