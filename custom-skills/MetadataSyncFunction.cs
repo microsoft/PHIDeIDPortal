@@ -87,6 +87,7 @@ namespace AISearch.CustomFunctions
                     }
 
                     cosmosRecord.LastIndexed = DateTime.UtcNow;
+                    cosmosRecord.AwaitingIndex = false;
 
                     // Update status on the Cosmos DB record
                     await _cosmosDBService.UpsertItemAsync(cosmosRecord);

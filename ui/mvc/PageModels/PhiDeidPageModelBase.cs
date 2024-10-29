@@ -31,11 +31,12 @@ namespace PhiDeidPortal.Ui.PageModels
             _cosmosClient = cosmosClient;
             _authService = authService;
         }
-        public async Task DoCounts()
+        public async Task DoCounts(bool filterByAuthor)
         {
             var cosmosDb = _cosmosClient.GetDatabase("deid");
             var cosmosContainer = cosmosDb.GetContainer("metadata");
-            var results = cosmosContainer.GetItemQueryIterator<dynamic>($"SELECT * FROM c where c.Author = '{User.Identity.Name}'");
+            var query = (IsAuthorized && !filterByAuthor) ? $"SELECT * FROM c" : $"SELECT * FROM c where c.Author = '{User.Identity.Name}'";
+            var results = cosmosContainer.GetItemQueryIterator<dynamic>(query);
             _cosmosResults = new List<dynamic>();
             while (results.HasMoreResults)
             {

@@ -23,9 +23,10 @@ phideid.ui = (function () {
                 $(this).children('div').children('div').bind('click', function () {
                     phideid.ui.redirect(elemPath);
                 });
-            });   
+            });
 
             phideid.ui.setSearchBoxValue();
+            phideid.ui.setViewAllIcon();
         },
 
         showPIIHover(elem, e) {
@@ -38,12 +39,12 @@ phideid.ui = (function () {
 
         showPIIDetails(elem, modalElem, modalContentElem) {
             modalContentElem.val(elem.html());
-            modalElem.modal('show');            
+            modalElem.modal('show');
         },
 
         redirect(path) {
             sessionStorage.setItem("path", path);
-            location.href = "/" + path;
+            phideid.ui.search("/" + path);
         },
 
         addUploadTag(tagValue, tagCloudElem, tagInputElem) {
@@ -71,7 +72,7 @@ phideid.ui = (function () {
 
         },
 
-        submitUpload(formElem) {      
+        submitUpload(formElem) {
 
             $(".upload-error").hide();
             $(".upload-error-2").hide();
@@ -118,10 +119,10 @@ phideid.ui = (function () {
                 success: function (data) {
                     $(".loading").hide();
                     $("#uploadDialog").modal('hide');
-                    phideid.ui.showToast("Document uploaded.");
+                    phideid.ui.showToast("Document uploaded.", false, true);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    $(".upload-error-2").html(`There was an error uploading the document: ${XMLHttpRequest.responseText}`);
+                    $(".upload-error-2").html(`There was an error uploading the document: ${XMLHttpRequest.responseText}`, true, false);
                     $(".upload-error-2").show();
                     phideid.ui.hideLoadingIndicator();
                 }
@@ -156,18 +157,53 @@ phideid.ui = (function () {
             }
             $(".search-row input[type='text']").val(value);
         },
-        
-        search() {
+
+        search(path) {
             var searchValue = $(".search-row input[type='text']").val();
             sessionStorage.setItem("searchValue", searchValue);
-            var query = "?q=" + searchValue;
-            location.href = location.pathname + query;
+            var query = (searchValue && searchValue.length > 0) ? "q=" + searchValue : "";
+            var viewAll = sessionStorage.getItem("viewMe");
+            var view = (viewAll && viewAll === "me") ? "&v=" + sessionStorage.getItem("viewMe") : "";
+            var params = (query || view) ? "?" : "";
+            var destination = (path) ? path : location.pathname;
+            location.href = destination + params + query + view;
         },
 
-        showToast(message) {
+        toggleViewAll() {
+            var viewAll = sessionStorage.getItem("viewMe");
+            if (viewAll && viewAll === "me") { sessionStorage.removeItem("viewMe"); }
+            else { sessionStorage.setItem("viewMe", "me"); }
+            phideid.ui.setViewAllIcon();
+            phideid.ui.search();
+        },
+
+        setViewAllIcon() { 
+            var viewAll = sessionStorage.getItem("viewMe");
+            if (viewAll && viewAll === "me") { $(".viewall-button").html("<i class='bi bi-eye-slash'></i>"); }
+            else { $(".viewall-button").html("<i class='bi bi-eye'></i>"); }
+        },
+
+        showToast(message,isError,showReload) {
             const toastElem = bootstrap.Toast.getOrCreateInstance(document.getElementById("toast"));
+            if (showReload) { message += "&nbsp;<a id='toastreload' href='javascript:phideid.ui.toastReload();'>Reload</a>"; }
+            if (isError) { message = "<i class='bi bi-exclamation-triangle'></i> " + message; }
+            else { message = "<i class='bi bi-info-circle'></i> " + message; }
+            
             $(".toast-body").html(message);
             toastElem.show();
+        },
+
+        toastReload() {
+            $("#toastreload").attr('href', '#');
+            $("#toastreload").html("Reloading in 5 sec ...");
+            var count = 0;
+            var interval = setInterval(function () {
+                $("#toastreload").html(`Reloading in ${(4 - count++)} sec ...`);
+                if (count >= 5) {
+                    clearInterval(interval);
+                    location.reload();
+                }
+            },1000);
         },
 
         checkInputLength(elem, minLength) {
@@ -192,11 +228,14 @@ phideid.ui = (function () {
                 contentType: 'application/json',
                 success: function (data) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("Document updated.");
+                    phideid.ui.showToast("Document updated.",false,true);
+                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast(`There was an error updating the document: ${XMLHttpRequest.responseText}`);
+                    var reload = (XMLHttpRequest.status === 409);
+                    phideid.ui.showToast(`There was an error updating the document: ${XMLHttpRequest.responseText}`,true,reload);
+                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 }
 
             });
@@ -225,11 +264,14 @@ phideid.ui = (function () {
                 contentType: 'application/json',
                 success: function (data) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("Document updated.");
+                    phideid.ui.showToast("Document updated.",false,true);
+                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast(`There was an error updating the document: ${XMLHttpRequest.responseText}`);
+                    var reload = (XMLHttpRequest.status === 409);
+                    phideid.ui.showToast(`There was an error updating the document: ${XMLHttpRequest.responseText}`,true,reload);
+                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 }
 
             });
@@ -252,11 +294,13 @@ phideid.ui = (function () {
                 contentType: 'application/json',
                 success: function (data) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("Document deleted.");
+                    phideid.ui.showToast("Document deleted.",false,true);
+                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast(`There was an error deleting the document: ${XMLHttpRequest.responseText}`);
+                    phideid.ui.showToast(`There was an error deleting the document: ${XMLHttpRequest.responseText}`,true,false);
+                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 }
 
             });
@@ -270,14 +314,18 @@ phideid.ui = (function () {
                 type: 'POST',
                 success: function (data) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("Documents reindexed.");
+                    phideid.ui.showToast("Documents reindexed.",false,true);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast(`There was an error reindexing the documents: ${XMLHttpRequest.responseText}`);
+                    phideid.ui.showToast(`There was an error reindexing the documents: ${XMLHttpRequest.responseText}`,true,false);
                 }
 
             });
+        },
+
+        disableButtonGroup(elem) {
+            elem.find("input[type='button'], button").attr("disabled", "disabled");
         },
 
         downloadFile(filename) {
@@ -306,4 +354,5 @@ $(document).ready(function () {
     $(".deny-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); var uri = $(this).attr("data-href"); phideid.ui.updateDocumentStatus(id, uri, 5); });
     $(".delete-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var uri = $(this).attr("data-href"); phideid.ui.deleteDocument(id, uri); });
     $(".download-button").bind("click", function () { var file = $(this).attr("data-href"); phideid.ui.downloadFile(file); });
+    $(".viewall-button").bind("click", function () { phideid.ui.toggleViewAll(); });
 });

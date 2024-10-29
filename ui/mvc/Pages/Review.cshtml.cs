@@ -27,13 +27,16 @@ namespace PhiDeidPortal.Ui.Pages
 
         public async Task OnGet()
         {
+            var viewQuery = Request.Query["v"].ToString();
+            var searchQuery = Request.Query["q"].ToString();
+
+            await base.DoCounts(viewQuery.ToLower() == "me");
+
             if (!IsAuthorized) return;
 
-            await base.DoCounts();
-
             var filter = $"status eq 3";
-            var searchString = Request.Query["q"].ToString() ?? "*";
-
+            var searchString = searchQuery ?? "*";
+            if (viewQuery.ToLower() == "me" || !IsAuthorized) { searchString += $"+{User.Identity.Name}"; }
             await Query(filter, searchString);
         }
 
