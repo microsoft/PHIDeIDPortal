@@ -106,9 +106,12 @@ namespace PhiDeidPortal.Ui
             };
 
             var cosmosConnectionString = builder.Configuration.GetConnectionString("Cosmos");
-
+            var cosmosEndpoint = builder.Configuration.GetSection("CosmosDb")["Endpoint"];
+            var cosmosUseEntraAuth = bool.Parse(builder.Configuration.GetSection("CosmosDb")["UseEntraAuth"] ?? "false");
+            
             // Use a Singleton instance of the CosmosClient
-            CosmosClient cosmosClient = new CosmosClient(cosmosConnectionString, cosmosClientOptions);
+            var cosmosClient = cosmosUseEntraAuth ?     new CosmosClient(cosmosEndpoint, new DefaultAzureCredential(), cosmosClientOptions) :
+                                                        new CosmosClient(cosmosConnectionString, cosmosClientOptions);
 
             builder.Services.AddSingleton(x =>
             {

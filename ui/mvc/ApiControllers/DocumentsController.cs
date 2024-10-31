@@ -101,7 +101,7 @@ namespace PhiDeidPortal.Ui.Controllers
                 var upload = await _cosmosService.UpsertMetadataRecord(metadataRecord);
                 if (upload.StatusCode !=  HttpStatusCode.Created) { throw new Exception(); }
             }
-            catch
+            catch (Exception ex)
             {
                 return BadRequest($"Error uploading document metadata to Cosmos DB.");
             }
