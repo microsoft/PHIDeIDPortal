@@ -84,8 +84,8 @@ namespace PhiDeidPortal.Ui.Controllers
                 return StatusCode(500, "Error uploading document to the Storage Account.");
             }
 
-            try
-            {
+            //try
+            //{
                 MetadataRecord metadataRecord = new(
                 id: Guid.NewGuid().ToString(),
                 FileName: blobName,
@@ -100,11 +100,11 @@ namespace PhiDeidPortal.Ui.Controllers
 
                 var upload = await _cosmosService.UpsertMetadataRecord(metadataRecord);
                 if (upload.StatusCode !=  HttpStatusCode.Created) { throw new Exception(); }
-            }
-            catch
-            {
-                return BadRequest($"Error uploading document metadata to Cosmos DB.");
-            }
+            //}
+            //catch (Exception ex)
+            //{
+             //   return BadRequest($"Error uploading document metadata to Cosmos DB.");
+            //}
 
             var reupload = _searchConfiguration["ReindexOnUpload"] ?? "false";
             if (reupload.Equals("true", StringComparison.CurrentCultureIgnoreCase)) { await _searchService.RunIndexer(String.Empty); }

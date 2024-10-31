@@ -18,11 +18,11 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.10" />
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.44.1" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.45.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.10" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.10" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.66.1" />
-    <PackageReference Include="Microsoft.Identity.Web" Version="3.2.2" />
-    <PackageReference Include="Microsoft.Identity.Web.UI" Version="3.2.2" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="3.3.0" />
+    <PackageReference Include="Microsoft.Identity.Web.UI" Version="3.3.0" />
   </ItemGroup>  
 </Project>
