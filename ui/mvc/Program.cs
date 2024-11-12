@@ -1,4 +1,5 @@
 using Azure.Identity;
+using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -60,7 +61,9 @@ namespace PhiDeidPortal.Ui
 
             var configuration = builder.Configuration.GetSection("StorageAccount");
             var storageAccountUri = configuration["Uri"];
-            var blobServiceClient = new BlobServiceClient(new Uri(storageAccountUri), new DefaultAzureCredential());
+            var credential = new StorageSharedKeyCredential(configuration["Name"], configuration["ApiKey"]);
+            var blobServiceClient = new BlobServiceClient(new Uri(storageAccountUri), credential);
+
 
             builder.Services.AddSingleton(x =>
             {
