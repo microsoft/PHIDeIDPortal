@@ -11,7 +11,7 @@ namespace PhiDeidPortal.Ui.Services
             _configuration = (IConfigurationRoot)configRoot;
         }
 
-        public bool Authorize(ClaimsPrincipal user)
+        public bool HasElevatedRights(ClaimsPrincipal user)
         {
             var userGroupClaim = user.Claims.FirstOrDefault(c => c.Type == "groups" && c.Value == _configuration.GetValue<string>("GroupClaimAdminId"));
             return userGroupClaim != null;

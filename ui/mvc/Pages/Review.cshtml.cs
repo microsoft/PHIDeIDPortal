@@ -1,55 +1,44 @@
 using Azure.Search.Documents.Models;
-using Azure.Search.Documents;
 using Azure;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Identity.Client;
-using Microsoft.Azure.Cosmos;
-using PhiDeidPortal.Ui.PageModels;
+using Microsoft.FeatureManagement.Mvc;
 using PhiDeidPortal.Ui.Services;
+using PhiDeidPortal.Ui.Entities;
+using IAuthorizationService = PhiDeidPortal.Ui.Services.IAuthorizationService;
 
 namespace PhiDeidPortal.Ui.Pages
 {
     [Authorize]
-    public class ReviewModel : PhiDeidPageModelBase
+    [FeatureGate(Feature.ManualReviewView)]
+    public class ReviewModel(IAuthorizationService authorizationService, IAISearchService searchService, ICosmosService cosmosService, IFeatureService featureService) : PageModel
     {
-        private readonly ILogger<ReviewModel> _logger;
-        private readonly ICosmosService _cosmosService;
+        private readonly IAISearchService _searchService = searchService;
+        private readonly IAuthorizationService _authService = authorizationService;
+        private readonly ICosmosService _cosmosService = cosmosService;
+        private readonly IFeatureService _featureService = featureService;
+        public Pageable<SearchResult<SearchDocument>>? Results { get; private set; }
+        public bool UserHasElevatedRights { get; set; }
+        public bool IsDownloadFeatureAvailable { get; private set; }
 
-        public ReviewModel(ILogger<ReviewModel> logger, IAISearchService indexQueryer, CosmosClient cosmosClient, IConfiguration configRoot, Services.IAuthorizationService authorizationService)
-            : base(indexQueryer, cosmosClient, authorizationService)
+        public void OnGet()
         {
-            _logger = logger;
-            _cosmosService = new CosmosService(cosmosClient, configRoot);
-        }
+            if (User.Identity?.Name is null) return;
+            var viewFilter = Request.Query["v"].ToString().ToLower() == "me";
+            var searchString = Request.Query["q"].ToString();
+            var isElevated = _authService.HasElevatedRights(User);
+            var searchFilter = $"status eq 3";
 
-        public async Task OnGet()
-        {
-            var viewQuery = Request.Query["v"].ToString();
-            var searchQuery = Request.Query["q"].ToString();
-
-            await base.DoCounts(viewQuery.ToLower() == "me");
-
-            if (!IsAuthorized) return;
-
-            var filter = $"status eq 3";
-            var searchString = searchQuery ?? "*";
-            if (viewQuery.ToLower() == "me" || !IsAuthorized) { searchString += $"+{User.Identity.Name}"; }
-            await Query(filter, searchString);
+            Results = (isElevated && !viewFilter) ? _searchService.SearchAsync(searchFilter, searchString).Result : _searchService.SearchByAuthorAsync(User.Identity.Name, searchFilter, searchString).Result;
+            UserHasElevatedRights = isElevated;
+            IsDownloadFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Download);
         }
 
         public async Task<string> GetJustificationText(string uri)
         {
             var document = _cosmosService.GetMetadataRecordByUri(uri);
-
-            if (null != document)
-            { 
-                return document.JustificationText;
-            }
-
-            return "No justification provided.";
+            return document is null ? "No justification provided." : document.JustificationText;
         }
     }
 }
+

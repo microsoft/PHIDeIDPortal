@@ -1,0 +1,24 @@
+﻿@using PhiDeidPortal.Ui.ViewComponents
+@using PhiDeidPortal.Ui.Entities
+@model UploadViewModel
+
+@{
+    if (Model.IsFeatureAvailable)
+    {
+        <form id="uploadForm" action="/api/Documents" method="post" enctype="multipart/form-data">
+            <input type="file" id="fileInput" name="file" accept=".pdf, .csv, .json, .xls, .xlsx, .doc, .docx" required>
+            <div class="row">
+                  <div class="col"><input type="text" class="form-control" id="uploadTagEntry" placeholder="(Optional) Enter a tag" /></div>
+                  <div class="col"><button class="btn btn-secondary" id="addTag" type="button"><i class="bi bi-plus-lg"></i> Add</button></div>
+            </div>
+            <input type="text" class="form-control" name="uploadTags" id="uploadTags" readonly hidden />
+            <div id="uploadTagCloud">
+            </div>
+            <button id="submitUpload" class="btn btn-primary" type="button"><i class="bi bi-upload"></i> Upload</button>
+            <div class="upload-error .text-danger">Only .pdf, .csv, .json, .xls, .doc, and .docx are supported.</div>
+            <div class="upload-error-2 .text-danger">There was an error uploading the file. Please try again.</div>
+        </form>
+    }
+}
+
+

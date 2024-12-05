@@ -46,6 +46,10 @@ body {
     margin-top: 10px;
 }
 
+.tab:last-child {
+    border-right: 0px none;
+}
+
 .tab .highlight > div {
     background: #f4f4f4;
     margin: 8px;

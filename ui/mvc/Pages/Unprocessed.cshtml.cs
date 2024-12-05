@@ -1,31 +1,26 @@
-using Azure.Search.Documents.Models;
-using Azure.Search.Documents;
-using Azure;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Identity.Client;
-using Microsoft.Azure.Cosmos;
-using PhiDeidPortal.Ui.PageModels;
+using Microsoft.FeatureManagement.Mvc;
 using PhiDeidPortal.Ui.Services;
+using PhiDeidPortal.Ui.Entities;
+using IAuthorizationService = PhiDeidPortal.Ui.Services.IAuthorizationService;
 
 namespace PhiDeidPortal.Ui.Pages
 {
     [Authorize]
-    public class UnprocessedModel : PhiDeidPageModelBase
+    [FeatureGate(Feature.UnprocessedView)]
+    public class UnprocessedModel(IAuthorizationService authorizationService, ICosmosService cosmosService) : PageModel
     {
-        private readonly ILogger<UnprocessedModel> _logger;
+        private readonly ICosmosService _cosmosService = cosmosService;
+        private readonly IAuthorizationService _authService = authorizationService;
+        public List<MetadataRecord> Results { get; private set; } = [];
 
-        public UnprocessedModel(ILogger<UnprocessedModel> logger, IAISearchService indexQueryer, CosmosClient cosmosClient, Services.IAuthorizationService authorizationService)
-            : base(indexQueryer, cosmosClient, authorizationService)
+        public void OnGet()
         {
-            _logger = logger;
-        }
-
-        public async Task OnGet()
-        {
-            await base.DoCounts(Request.Query["v"].ToString().ToLower() == "me");
+            if (User.Identity?.Name is null) return;
+            var viewFilter = Request.Query["v"].ToString().ToLower() == "me";
+            var isElevated = _authService.HasElevatedRights(User);
+            Results = (isElevated && !viewFilter) ? _cosmosService.GetMetadataRecordsByStatus(1) : _cosmosService.GetMetadataRecordsByStatusAndAuthor(1,User.Identity.Name);
         }
     }
 }

@@ -1,14 +1,21 @@
 ﻿using Microsoft.Azure.Cosmos;
+using PhiDeidPortal.Ui.Entities;
 
 namespace PhiDeidPortal.Ui.Services
 {
     public interface ICosmosService
     {
-        MetadataRecord? GetMetadataRecord(string docId);
-        Task<ItemResponse<MetadataRecord>> UpsertMetadataRecord(MetadataRecord record);
+        List<MetadataRecord> GetAllMetadataRecords();
+        List<MetadataRecord> GetAllMetadataRecordsByAuthor(string author);
+        MetadataRecord? GetMetadataRecordById(string docId);
         MetadataRecord? GetMetadataRecordByUri(string uri);
-        MetadataRecord? GetMetadataRecordByAuthorAndUri(string author, string uri);
-        Task<ServiceResponse> DeleteMetadataRecord(MetadataRecord document);
+        MetadataRecord? GetMetadataRecordByUriAndAuthor(string uri, string author);
+        List<MetadataRecord> GetMetadataRecordsByStatus(int status);
+        List<MetadataRecord> GetMetadataRecordsByStatusAndAuthor(int status, string author);
+        StatusSummary GetSummary();
+        StatusSummary GetSummaryByAuthor(string author);
+        Task<ItemResponse<MetadataRecord>> UpsertMetadataRecordAsync(MetadataRecord record);
+        Task<ServiceResponse> DeleteMetadataRecordAsync(MetadataRecord document);
     }
 
 }

@@ -1,39 +1,36 @@
 using Azure.Search.Documents.Models;
-using Azure.Search.Documents;
 using Azure;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Identity.Client;
+using Microsoft.FeatureManagement.Mvc;
 using PhiDeidPortal.Ui.Services;
-using Microsoft.Azure.Cosmos;
-using PhiDeidPortal.Ui.PageModels;
+using PhiDeidPortal.Ui.Entities;
+using IAuthorizationService = PhiDeidPortal.Ui.Services.IAuthorizationService;
 
 namespace PhiDeidPortal.Ui.Pages
 {
     [Authorize]
-    public class CompletedModel : PhiDeidPageModelBase
+    [FeatureGate(Feature.ApprovedView)]
+    public class CompletedModel(IAuthorizationService authorizationService, IAISearchService searchService, IFeatureService featureService) : PageModel
     {
-        private readonly ILogger<CompletedModel> _logger;
+        private readonly IAISearchService _searchService = searchService;
+        private readonly IAuthorizationService _authService = authorizationService;
+        private readonly IFeatureService _featureService = featureService;
+        public Pageable<SearchResult<SearchDocument>>? Results { get; private set; }
+        public bool IsDownloadFeatureAvailable { get; private set; }
+        public bool IsDeleteFeatureAvailable { get; private set; }
 
-        public CompletedModel(ILogger<CompletedModel> logger, IAISearchService indexQueryer, CosmosClient cosmosClient, Services.IAuthorizationService authorizationService)
-            : base(indexQueryer, cosmosClient, authorizationService)
+        public void OnGet()
         {
-            _logger = logger;
-        }
+            if (User.Identity?.Name is null) return;
+            var viewFilter = Request.Query["v"].ToString().ToLower() == "me";
+            var searchString = Request.Query["q"].ToString();
+            var isElevated = _authService.HasElevatedRights(User);
+            var searchFilter = $"status eq 4";
 
-        public async Task OnGet()
-        {
-            var viewQuery = Request.Query["v"].ToString();
-            var searchQuery = Request.Query["q"].ToString();
-
-            await base.DoCounts(viewQuery.ToLower() == "me");
-
-            var filter = $"status eq 4";
-            var searchString = searchQuery ?? "*";
-            if (viewQuery.ToLower() == "me" || !IsAuthorized) { searchString += $"+{User.Identity.Name}"; }
-            await Query(filter, searchString);
+            Results = (isElevated && !viewFilter) ? _searchService.SearchAsync(searchFilter, searchString).Result : _searchService.SearchByAuthorAsync(User.Identity.Name, searchFilter, searchString).Result;
+            IsDownloadFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Download);
+            IsDeleteFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Delete);
         }
     }
 }

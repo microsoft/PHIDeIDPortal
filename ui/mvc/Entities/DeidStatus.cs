@@ -1,4 +1,4 @@
-﻿namespace PhiDeidPortal.Ui.Common
+﻿namespace PhiDeidPortal.Ui.Entities
 {
     public enum DeidStatus
     {

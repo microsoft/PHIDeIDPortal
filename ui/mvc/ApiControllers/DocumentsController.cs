@@ -10,12 +10,12 @@ using PhiDeidPortal.Ui;
 using PhiDeidPortal.Ui.Services;
 using PhiDeidPortal.Ui.Entities;
 using Microsoft.AspNetCore.Razor.TagHelpers;
-using PhiDeidPortal.Ui.Common;
 using System;
 using System.Net;
 using System.Reflection.Metadata;
 using System.Xml.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.FeatureManagement.Mvc;
 
 namespace PhiDeidPortal.Ui.Controllers
 {
@@ -29,11 +29,11 @@ namespace PhiDeidPortal.Ui.Controllers
         private readonly IConfigurationSection _searchConfiguration;
         private readonly IAISearchService _searchService;
         private readonly Services.IAuthorizationService _authorizationService;
+        private readonly IFeatureService _featureService;
 
         private readonly string _containerName = "";
 
-
-        public DocumentsController(IBlobService blobService, IConfiguration configuration, CosmosClient cosmosClient, IAISearchService searchService, ICosmosService cosmosService, Services.IAuthorizationService authorizationService)
+        public DocumentsController(IBlobService blobService, IConfiguration configuration, CosmosClient cosmosClient, IAISearchService searchService, ICosmosService cosmosService, Services.IAuthorizationService authorizationService, IFeatureService featureService)
         {
             _blobService = blobService;
             _storageConfiguration = configuration.GetSection("StorageAccount");
@@ -41,26 +41,28 @@ namespace PhiDeidPortal.Ui.Controllers
             _cosmosService = cosmosService;
             _searchService = searchService;
             _authorizationService = authorizationService;
+            _featureService = featureService;
 
             _containerName = $"{_storageConfiguration["Container"]}";
         }
 
         [HttpGet]
         [Route("api/documents/{filename}")]
+        [FeatureGate(Feature.Download)]
         public async Task<IActionResult> Get(string filename)
         {
+         //   if (!_featureService.IsFeatureEnabled(Feature.Download)) return NotFound();
+
             return new FileStreamResult(
                 await _blobService.GetDocumentStreamAsync(_containerName, filename),
                 "application/octet-stream");
         }
 
         [Route("api/documents/upload")]
+        [FeatureGate(Feature.Upload)]
         public async Task<IActionResult> Post(IFormFile file)
         {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest("No file uploaded");
-            }
+            if (file == null || file.Length == 0) return BadRequest("No file uploaded");
 
             string blobName = Regex.Replace(Path.GetFileName(file.FileName), @"[^a-zA-Z0-9_\-\.]", "");
 
@@ -98,7 +100,7 @@ namespace PhiDeidPortal.Ui.Controllers
                 JustificationText: ""
                 );
 
-                var upload = await _cosmosService.UpsertMetadataRecord(metadataRecord);
+                var upload = await _cosmosService.UpsertMetadataRecordAsync(metadataRecord);
                 if (upload.StatusCode !=  HttpStatusCode.Created) { throw new Exception(); }
             }
             catch (Exception ex)
@@ -107,19 +109,19 @@ namespace PhiDeidPortal.Ui.Controllers
             }
 
             var reupload = _searchConfiguration["ReindexOnUpload"] ?? "false";
-            if (reupload.Equals("true", StringComparison.CurrentCultureIgnoreCase)) { await _searchService.RunIndexer(String.Empty); }
+            if (reupload.Equals("true", StringComparison.CurrentCultureIgnoreCase)) { await _searchService.RunIndexerAsync(String.Empty); }
 
             return Ok("Document uploaded successfully");
         }
 
         [HttpPost]
         [Route("api/documents/reset")]
+        [FeatureGate(Feature.ResetIndex)]
         public async Task<IActionResult> Reset(StatusChangeRequestEntity document)
         {
-            // todo update cosmos with document.Id and document.Message
-            var reset = await _searchService.ResetDocument(document.Key);
+            var reset = await _searchService.ResetDocumentAsync(document.Key);
             if (!reset.IsSuccess) return BadRequest($"Reset document failed. Code {reset.Code}");
-            var reindex = await _searchService.RunIndexer(String.Empty);
+            var reindex = await _searchService.RunIndexerAsync(String.Empty);
             if (!reindex.IsSuccess) return BadRequest($"Reindex failed. Code {reindex.Code}");
 
             return Ok();
@@ -127,15 +129,16 @@ namespace PhiDeidPortal.Ui.Controllers
 
         [HttpPost]
         [Route("api/documents/delete")]
+        [FeatureGate(Feature.Delete)]
         public async Task<IActionResult> Delete(DeleteDocumentRequestEntity document)
         {
             var cosmosDocument = GetMetadataRecordByUri(document.Uri);
             if (cosmosDocument is null) return BadRequest("Document not found for the given author.");
             var deleteBlob = await _blobService.DeleteDocumentAsync(_containerName, document.Uri);
             if (!deleteBlob.IsSuccess) return BadRequest("Delete document failed - Storage (1).");
-            var deleteCosmos = await _cosmosService.DeleteMetadataRecord(cosmosDocument);
+            var deleteCosmos = await _cosmosService.DeleteMetadataRecordAsync(cosmosDocument);
             if (!deleteCosmos.IsSuccess) return BadRequest("Delete document failed - Cosmos (2).");
-            var deleteIndex = await _searchService.DeleteDocument(document.Key);
+            var deleteIndex = await _searchService.DeleteDocumentAsync(document.Key);
             if (!deleteIndex.IsSuccess) return BadRequest("Delete document failed - Index (3).");
 
             return Ok();
@@ -143,11 +146,12 @@ namespace PhiDeidPortal.Ui.Controllers
 
         [HttpPost]
         [Route("api/documents/deletefromsearchindex")]
+        [FeatureGate(Feature.Delete)]
         public async Task<IActionResult> DeleteFromSearchIndex(DeleteDocumentRequestEntity document)
         {
             // Admins only
-            if (!_authorizationService.Authorize(User)) return Unauthorized("Unauthorized. Please request access to the app administrator group.");
-            var deleteIndex = await _searchService.DeleteDocument(document.Key);
+            if (!_authorizationService.HasElevatedRights(User)) return Unauthorized("Unauthorized. Please request access to the app administrator group.");
+            var deleteIndex = await _searchService.DeleteDocumentAsync(document.Key);
             if (!deleteIndex.IsSuccess) return BadRequest("Delete document failed.");
 
             return Ok();
@@ -155,11 +159,12 @@ namespace PhiDeidPortal.Ui.Controllers
 
         [HttpPost]
         [Route("api/documents/reindex")]
+        [FeatureGate(Feature.Reindex)]
         public async Task<IActionResult> Reindex()
         {
             // Admins only
-            if (!_authorizationService.Authorize(User)) return Unauthorized("Unauthorized. Please request access to the app administrator group.");
-            var reindex = await _searchService.RunIndexer(String.Empty);
+            if (!_authorizationService.HasElevatedRights(User)) return Unauthorized("Unauthorized. Please request access to the app administrator group.");
+            var reindex = await _searchService.RunIndexerAsync(String.Empty);
             if (!reindex.IsSuccess) return BadRequest("Delete document failed.");
 
             return Ok();
@@ -167,6 +172,7 @@ namespace PhiDeidPortal.Ui.Controllers
 
         [HttpPost]
         [Route("api/documents/approve")]
+        [FeatureGate(Feature.ManualReviewView)]
         public async Task<IActionResult> Approve(StatusChangeRequestEntity document)
         {
             return await HandleApproval(document, DeidStatus.Approved);
@@ -174,43 +180,15 @@ namespace PhiDeidPortal.Ui.Controllers
         
         [HttpPost]
         [Route("api/documents/deny")]
+        [FeatureGate(Feature.ManualReviewView)]
         public async Task<IActionResult> Deny(StatusChangeRequestEntity document)
         {
             return await HandleApproval(document, DeidStatus.Denied);
         }
 
-        private async Task<IActionResult> HandleApproval(StatusChangeRequestEntity document, DeidStatus status)
-        {
-            var oldRecord = GetMetadataRecordByUri(document.Uri, true);
-            if (oldRecord is null) return BadRequest("Document not found for the given approver.");
-            if (oldRecord.AwaitingIndex) return Conflict("Document is awaiting reindex. Please refresh and try again.");
-            if (oldRecord.Status > 3) return Conflict("Document is awaiting reindex. Please refresh and try again.");
-
-            MetadataRecord newRecord = new(
-                 id: Guid.NewGuid().ToString(),  //oldRecord.id,
-                FileName: oldRecord.FileName,
-                Uri: oldRecord.Uri,
-                Author: oldRecord.Author,
-                Status: (int)status,
-                OrganizationalMetadata: oldRecord.OrganizationalMetadata,
-                LastIndexed: oldRecord.LastIndexed,
-                AwaitingIndex: true,
-                JustificationText: oldRecord.JustificationText
-                );
-
-            await _cosmosService.DeleteMetadataRecord(oldRecord);
-            await _cosmosService.UpsertMetadataRecord(newRecord);
-            
-            var reset = await _searchService.ResetDocument(document.Key);
-            if (!reset.IsSuccess) return BadRequest($"Reset document failed. Code {reset.Code}");
-            var reindex = await _searchService.RunIndexer(String.Empty);
-            if (!reindex.IsSuccess) return BadRequest($"Reindex failed. Code {reindex.Code}");
-
-            return Ok();
-        }
-
         [HttpPost]
         [Route("api/documents/justify")]
+        [FeatureGate(Feature.JustificationView)]
         public async Task<IActionResult> SubmitJustification(StatusChangeRequestEntity document)
         {
             var oldRecord = GetMetadataRecordByUri(document.Uri);
@@ -230,12 +208,42 @@ namespace PhiDeidPortal.Ui.Controllers
                 JustificationText: document.Comment ??= ""
                 );
 
-            await _cosmosService.DeleteMetadataRecord(oldRecord);
-            await _cosmosService.UpsertMetadataRecord(newRecord);
+            await _cosmosService.DeleteMetadataRecordAsync(oldRecord);
+            await _cosmosService.UpsertMetadataRecordAsync(newRecord);
 
-            var reset = await _searchService.ResetDocument(document.Key);
+            var reset = await _searchService.ResetDocumentAsync(document.Key);
             if (!reset.IsSuccess) return BadRequest($"Reset document failed. Code {reset.Code}");
-            var reindex = await _searchService.RunIndexer(String.Empty);
+            var reindex = await _searchService.RunIndexerAsync(String.Empty);
+            if (!reindex.IsSuccess) return BadRequest($"Reindex failed. Code {reindex.Code}");
+
+            return Ok();
+        }
+
+        private async Task<IActionResult> HandleApproval(StatusChangeRequestEntity document, DeidStatus status)
+        {
+            var oldRecord = GetMetadataRecordByUri(document.Uri, true);
+            if (oldRecord is null) return BadRequest("Document not found for the given approver.");
+            if (oldRecord.AwaitingIndex) return Conflict("Document is awaiting reindex. Please refresh and try again.");
+            if (oldRecord.Status > 3) return Conflict("Document is awaiting reindex. Please refresh and try again.");
+
+            MetadataRecord newRecord = new(
+                id: Guid.NewGuid().ToString(),
+                FileName: oldRecord.FileName,
+                Uri: oldRecord.Uri,
+                Author: oldRecord.Author,
+                Status: (int)status,
+                OrganizationalMetadata: oldRecord.OrganizationalMetadata,
+                LastIndexed: oldRecord.LastIndexed,
+                AwaitingIndex: true,
+                JustificationText: oldRecord.JustificationText
+                );
+
+            await _cosmosService.DeleteMetadataRecordAsync(oldRecord);
+            await _cosmosService.UpsertMetadataRecordAsync(newRecord);
+
+            var reset = await _searchService.ResetDocumentAsync(document.Key);
+            if (!reset.IsSuccess) return BadRequest($"Reset document failed. Code {reset.Code}");
+            var reindex = await _searchService.RunIndexerAsync(String.Empty);
             if (!reindex.IsSuccess) return BadRequest($"Reindex failed. Code {reindex.Code}");
 
             return Ok();
@@ -245,8 +253,8 @@ namespace PhiDeidPortal.Ui.Controllers
         {
             var user = User.Identity?.Name;
             if (user is null) return null;
-            if (adminOnly && !_authorizationService.Authorize(User)) return null;
-            var cosmosDocument = _cosmosService.GetMetadataRecordByAuthorAndUri(user, uri);
+            if (adminOnly && !_authorizationService.HasElevatedRights(User)) return null;
+            var cosmosDocument = _cosmosService.GetMetadataRecordByUriAndAuthor(uri,user);
             return cosmosDocument;
         }
 
