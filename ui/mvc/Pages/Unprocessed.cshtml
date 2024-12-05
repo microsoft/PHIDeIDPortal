@@ -16,14 +16,14 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var result in Model.CosmosResults.Where(x => x.Status == 1))
+        @foreach (var result in Model.Results)
         {
             <tr class="@(i % 2 == 0 ? "row-even" : "row-odd")">
                 <td style="vertical-align: top;">@result.FileName</td>
                 <td style="vertical-align: top;">@result.Author.ToString().Split('@')[0]</td>
                 <td style="vertical-align: top;" class="date-column">
                     @{
-                        var lastIndexedString = (result.LastIndexed is not null) ? result.LastIndexed : DateTime.MinValue;
+                        var lastIndexedString = result.LastIndexed; //(result.LastIndexed is not null) ? result.LastIndexed : DateTime.MinValue;
                         DateTime.TryParse(lastIndexedString.ToString(), out DateTime lastIndexed);
                         if (lastIndexed == DateTime.MinValue) { <span><i>unindexed</i></span> }
                         else { <span><script type="text/javascript">document.write(moment(moment.utc('@lastIndexed.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)').toDate()).local().format('YYYY-MM-DD hh:mm A'));</script></span> }

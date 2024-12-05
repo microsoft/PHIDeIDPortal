@@ -36,32 +36,22 @@ namespace PhiDeidPortal.Ui.Services
             _httpClient = new HttpClient();
         }
 
-        public async Task<Pageable<SearchResult<SearchDocument>>> Query(string filter, string searchString = "*")
+        public async Task<Pageable<SearchResult<SearchDocument>>> SearchAsync(string? filter, string? searchString = "*")
         {
-            SearchOptions options = new SearchOptions()
-            {
-                Filter = filter,
-                SearchMode = SearchMode.All
-            };
-
+            var options = (filter is null) ? new SearchOptions() { SearchMode = SearchMode.All } : new SearchOptions() { Filter = filter, SearchMode = SearchMode.All };
             SearchResults<SearchDocument> response = await _searchClient.SearchAsync<SearchDocument>(searchString, options);
-
             return response.GetResults();
         }
 
-        public async Task<Pageable<SearchResult<SearchDocument>>> Query(string searchString = "*")
+        public async Task<Pageable<SearchResult<SearchDocument>>> SearchByAuthorAsync(string author, string? filter, string? searchString = "*")
         {
-            SearchOptions options = new SearchOptions()
-            {
-                SearchMode = SearchMode.All
-            };
-
+            var options = (filter is null) ? new SearchOptions() { SearchMode = SearchMode.All } : new SearchOptions() { Filter = filter, SearchMode = SearchMode.All };
+            searchString += $"+{author}";
             SearchResults<SearchDocument> response = await _searchClient.SearchAsync<SearchDocument>(searchString, options);
-
             return response.GetResults();
         }
 
-        public async Task<ServiceResponse> ResetDocument(string key)
+        public async Task<ServiceResponse> ResetDocumentAsync(string key)
         {
             // Reset document is in preview.
             var uri = $"{_searchUri}/indexers/{_defaultIndexerName}/resetdocs?api-version=2020-06-30-Preview";
@@ -73,13 +63,13 @@ namespace PhiDeidPortal.Ui.Services
             return new ServiceResponse() { IsSuccess = (HttpStatusCode)response.StatusCode == HttpStatusCode.NoContent, Code = (HttpStatusCode)response.StatusCode };
         }
 
-        public async Task<ServiceResponse> DeleteDocument(string key)
+        public async Task<ServiceResponse> DeleteDocumentAsync(string key)
         {
             var response = await _searchClient.DeleteDocumentsAsync("id", new List<string>() { key });
             return new ServiceResponse() { IsSuccess = (HttpStatusCode)response.GetRawResponse().Status == HttpStatusCode.OK, Code = (HttpStatusCode)response.GetRawResponse().Status };
         }
 
-        public async Task<ServiceResponse> RunIndexer(string name)
+        public async Task<ServiceResponse> RunIndexerAsync(string name)
         {
             if (String.IsNullOrEmpty(name)) { name = _defaultIndexerName; }
             var response = await _indexerClient.RunIndexerAsync(name);
