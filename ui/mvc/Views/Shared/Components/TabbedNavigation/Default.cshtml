@@ -113,3 +113,25 @@
         </main>
     }
 }
+
+@section Scripts {
+    <script src="~/js/signalr/dist/browser/signalr.js"></script>
+    <script type="text/javascript">
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/cosmosdocuments")
+            .build();
+
+            debugger;
+
+        connection.on("UpdateCounts", function (statusSummary) {
+            document.getElementById("totalCount").innerText = statusSummary.TotalCount;
+            document.getElementById("unprocessedCount").innerText = statusSummary.UnprocessedCount;
+            document.getElementById("justificationCount").innerText = statusSummary.JustificationCount;
+            document.getElementById("reviewCount").innerText = statusSummary.ReviewCount;
+        });
+
+        connection.start().catch(function (err) {
+            return console.error(err.toString());
+        });
+    </script>
+}
