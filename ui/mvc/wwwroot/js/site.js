@@ -119,7 +119,7 @@ phideid.ui = (function () {
                 success: function (data) {
                     $(".loading").hide();
                     $("#uploadDialog").modal('hide');
-                    phideid.ui.showToast("Document uploaded.", false, true);
+                    phideid.ui.showToast("Document uploaded.", false, false);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     $(".upload-error-2").html(`There was an error uploading the document: ${XMLHttpRequest.responseText}`, true, false);
