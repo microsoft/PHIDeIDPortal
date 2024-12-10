@@ -44,10 +44,6 @@ namespace CosmosDBMonitor
         {
             if (documents != null && documents.Count > 0)
             {
-                //_logger.LogInformation("Documents modified: " + input.Count);
-                //_logger.LogInformation("First document Id: " + input[0].id);
-                var message = new { user = "tommy", message = "hi, friend." };
-
                 try
                 {
                     foreach (var doc in documents)
@@ -85,18 +81,5 @@ namespace CosmosDBMonitor
                 }
             }
         }
-    }
-
-    public class Metadata
-    {
-        public string id { get; set; }
-        public string Uri { get; set; }
-        public string FileName { get; set; }
-        public int Status { get; set; }
-        public string Author { get; set; }
-        public string[] OrganizationalMetadata { get; set; }
-        public string JustificationText { get; set; }
-        public bool AwaitingIndex { get; set; }
-        public DateTime LastIndexed { get; set; }
     }
 }
