@@ -29,7 +29,7 @@
                             <div class="unhighlight">
                                 <div>
                                     <div>All My Documents</div>
-                                    <h2>@Model.StatusSummary.TotalCount</h2>
+                                    <h2 id="totalCount">@Model.StatusSummary.TotalCount</h2>
                                 </div>
                             </div>
                         </div>
@@ -40,7 +40,7 @@
                             <div class="unhighlight">
                                 <div>
                                     <div><i class="bi bi-filter"></i>Awaiting Processing</div>
-                                    <h2>@Model.StatusSummary.UnprocessedCount</h2>
+                                    <h2 id="unprocessedCount">@Model.StatusSummary.UnprocessedCount</h2>
                                 </div>
                             </div>
                         </div>
@@ -51,7 +51,7 @@
                             <div class="highlight">
                                 <div>
                                     <div><i class="bi bi-filter"></i>Needs PHI Justification</div>
-                                    <h2>@Model.StatusSummary.JustificationCount</h2>
+                                    <h2 id="justificationCount">@Model.StatusSummary.JustificationCount</h2>
                                 </div>
                             </div>
                         </div>
@@ -62,7 +62,7 @@
                             <div class="unhighlight">
                                 <div>
                                     <div><i class="bi bi-filter"></i>Awaiting Manual Review</div>
-                                    <h2>@Model.StatusSummary.ReviewCount</h2>
+                                    <h2 id="reviewCount">@Model.StatusSummary.ReviewCount</h2>
                                 </div>
                             </div>
                         </div>
@@ -73,7 +73,7 @@
                             <div class="unhighlight">
                                 <div>
                                     <div><i class="bi bi-filter"></i>Approved</div>
-                                    <h2>@Model.StatusSummary.ApprovedCount</h2>
+                                    <h2 id="approvedCount">@Model.StatusSummary.ApprovedCount</h2>
                                 </div>
                             </div>
                         </div>
@@ -84,7 +84,7 @@
                             <div class="unhighlight">
                                 <div>
                                     <div><i class="bi bi-filter"></i>Denied</div>
-                                    <h2>@Model.StatusSummary.DeniedCount</h2>
+                                    <h2 id="deniedCount">@Model.StatusSummary.DeniedCount</h2>
                                 </div>
                             </div>
                         </div>
@@ -112,26 +112,4 @@
             </div>
         </main>
     }
-}
-
-@section Scripts {
-    <script src="~/js/signalr/dist/browser/signalr.js"></script>
-    <script type="text/javascript">
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/cosmosdocuments")
-            .build();
-
-            debugger;
-
-        connection.on("UpdateCounts", function (statusSummary) {
-            document.getElementById("totalCount").innerText = statusSummary.TotalCount;
-            document.getElementById("unprocessedCount").innerText = statusSummary.UnprocessedCount;
-            document.getElementById("justificationCount").innerText = statusSummary.JustificationCount;
-            document.getElementById("reviewCount").innerText = statusSummary.ReviewCount;
-        });
-
-        connection.start().catch(function (err) {
-            return console.error(err.toString());
-        });
-    </script>
 }

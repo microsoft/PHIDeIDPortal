@@ -14,7 +14,7 @@
     <script src="~/js/moment.min.js" asp-append-version="true"></script>
     <script src="~/js/moment-timezone.min.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="~/js/signalr/dist/browser/signalr.js" asp-append-version="true"></script>
+    <script src="~/js/signalr/dist/browser/signalr.min.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </head>
@@ -101,3 +101,35 @@
 
 </body>
 </html>
+
+
+<script type="text/javascript">
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/cosmosdocuments")
+        .build();
+
+    connection.on("UpdateCounts", function (summary) {
+        if ($("#totalCount").length) {
+            $("#totalCount").text(summary.totalCount);
+        }
+        if ($("#unprocessedCount").length) {
+            $("#unprocessedCount").text(summary.unprocessedCount);
+        }
+        if ($("#justificationCount").length) {
+            $("#justificationCount").text(summary.justificationCount);
+        }
+        if ($("#reviewCount").length) {
+            $("#reviewCount").text(summary.reviewCount);
+        }
+        if ($("#approvedCount").length) {
+            $("#approvedCount").text(summary.approvedCount);
+        }
+        if ($("#deniedCount").length) {
+            $("#deniedCount").text(summary.deniedCount);
+        }
+    });
+
+    connection.start().catch(function (err) {
+        return console.error(err.toString());
+    });
+</script>
