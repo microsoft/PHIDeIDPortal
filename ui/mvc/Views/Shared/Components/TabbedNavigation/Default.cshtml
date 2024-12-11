@@ -26,7 +26,7 @@
                     if (Model.PageFeatures.ContainsKey(Feature.AllDocumentsView) && Model.PageFeatures[Feature.AllDocumentsView].Equals(true))
                     {
                         <div class="tab col" data-href="index">
-                            <div class="unhighlight">
+                            <div id="myDocuments" class="unhighlight">
                                 <div>
                                     <div>All My Documents</div>
                                     <h2 id="totalCount">@Model.StatusSummary.TotalCount</h2>
@@ -37,7 +37,7 @@
                     if (Model.PageFeatures.ContainsKey(Feature.UnprocessedView) && Model.PageFeatures[Feature.UnprocessedView].Equals(true))
                     {
                         <div class="tab col" data-href="unprocessed">
-                            <div class="unhighlight">
+                            <div id="unprocessed" class="unhighlight">
                                 <div>
                                     <div><i class="bi bi-filter"></i>Awaiting Processing</div>
                                     <h2 id="unprocessedCount">@Model.StatusSummary.UnprocessedCount</h2>
@@ -48,7 +48,7 @@
                     if (Model.PageFeatures.ContainsKey(Feature.JustificationView) && Model.PageFeatures[Feature.JustificationView].Equals(true))
                     {
                         <div class="tab col" data-href="justification">
-                            <div class="highlight">
+                            <div id="justification" class="highlight">
                                 <div>
                                     <div><i class="bi bi-filter"></i>Needs PHI Justification</div>
                                     <h2 id="justificationCount">@Model.StatusSummary.JustificationCount</h2>
@@ -59,7 +59,7 @@
                     if (Model.PageFeatures.ContainsKey(Feature.ManualReviewView) && Model.PageFeatures[Feature.ManualReviewView].Equals(true))
                     {
                         <div class="tab col" data-href="review">
-                            <div class="unhighlight">
+                            <div id="review" class="unhighlight">
                                 <div>
                                     <div><i class="bi bi-filter"></i>Awaiting Manual Review</div>
                                     <h2 id="reviewCount">@Model.StatusSummary.ReviewCount</h2>
@@ -70,7 +70,7 @@
                     if (Model.PageFeatures.ContainsKey(Feature.ApprovedView) && Model.PageFeatures[Feature.ApprovedView].Equals(true))
                     {
                         <div class="tab col" data-href="completed">
-                            <div class="unhighlight">
+                            <div id="approved" class="unhighlight">
                                 <div>
                                     <div><i class="bi bi-filter"></i>Approved</div>
                                     <h2 id="approvedCount">@Model.StatusSummary.ApprovedCount</h2>
@@ -81,7 +81,7 @@
                     if (Model.PageFeatures.ContainsKey(Feature.DeniedView) && Model.PageFeatures[Feature.DeniedView].Equals(true))
                     {
                         <div class="tab col" data-href="denied">
-                            <div class="unhighlight">
+                            <div id="denied" class="unhighlight">
                                 <div>
                                     <div><i class="bi bi-filter"></i>Denied</div>
                                     <h2 id="deniedCount">@Model.StatusSummary.DeniedCount</h2>

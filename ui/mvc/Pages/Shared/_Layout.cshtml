@@ -108,26 +108,62 @@
         .withUrl("/cosmosdocuments")
         .build();
 
-    connection.on("UpdateCounts", function (summary) {
-        if ($("#totalCount").length) {
+    connection.on("UpdateCounts", async function (summary) {
+        // debugger;
+        
+        var highlightedDivId = $(".highlight").attr("id");
+        console.log("Highlighted div ID:", highlightedDivId);
+
+        if ($("#totalCount").length && $("#totalCount").text() !== summary.totalCount.toString()) {
             $("#totalCount").text(summary.totalCount);
+            if (highlightedDivId == "myDocuments") {
+                setTimeout(function () {
+                    location.reload();
+                }, 3000);
+            }
         }
-        if ($("#unprocessedCount").length) {
+        if ($("#unprocessedCount").length && $("#unprocessedCount").text() !== summary.unprocessedCount.toString()) {
             $("#unprocessedCount").text(summary.unprocessedCount);
+            if (highlightedDivId == "unprocessed") {
+                setTimeout(function () {
+                    location.reload();
+                }, 3000);
+            }
         }
-        if ($("#justificationCount").length) {
+        if ($("#justificationCount").length && $("#justificationCount").text() !== summary.justificationCount.toString()) {
             $("#justificationCount").text(summary.justificationCount);
+            if (highlightedDivId == "justification") {
+                setTimeout(function () {
+                    location.reload();
+                }, 3000);
+            }
         }
-        if ($("#reviewCount").length) {
+        if ($("#reviewCount").length && $("#reviewCount").text() !== summary.reviewCount.toString()) {
             $("#reviewCount").text(summary.reviewCount);
+            if (highlightedDivId == "review") {
+                setTimeout(function () {
+                    location.reload();
+                }, 3000);
+            }
         }
-        if ($("#approvedCount").length) {
+        if ($("#approvedCount").length && $("#approvedCount").text() !== summary.approvedCount.toString()) {
             $("#approvedCount").text(summary.approvedCount);
+            if (highlightedDivId == "approved") {
+                setTimeout(function () {
+                    location.reload();
+                }, 3000);
+            }
         }
-        if ($("#deniedCount").length) {
+        if ($("#deniedCount").length && $("#deniedCount").text() !== summary.deniedCount.toString()) {
             $("#deniedCount").text(summary.deniedCount);
+            if (highlightedDivId == "denied") {
+                setTimeout(function () {
+                    location.reload();
+                }, 3000);
+            }
         }
     });
+
 
     connection.start().catch(function (err) {
         return console.error(err.toString());
