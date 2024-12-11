@@ -19,6 +19,13 @@ namespace PhiDeidPortal.Ui.Services
             _blobServiceClient = blobServiceClient;
         }
 
+        public BlobService(IConfiguration configuration)
+        {
+            var blobServiceConfiguration = configuration.GetSection("StorageAccount");
+            var storageAccountUri = blobServiceConfiguration["Uri"];
+            _blobServiceClient = new BlobServiceClient(new Uri(storageAccountUri), new DefaultAzureCredential());
+        }
+
         public async Task<string> UploadDocumentAsync(IFormFile file, string containerName, string blobName)
         {
             BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
@@ -59,7 +66,7 @@ namespace PhiDeidPortal.Ui.Services
             return new ServiceResponse() { IsSuccess = delete.Value, Code = delete.Value == true ? HttpStatusCode.OK : HttpStatusCode.BadRequest, Message = delete.Value == true ? "Blob deleted" : "Blob not deleted" };
         }
 
-        public async Task<Uri> GetSasUri(string containerName, string fileName)
+        public async Task<Uri> GetSasUriAsync(string containerName, string fileName)
         {
             var blobContainerClient = _blobServiceClient.GetBlobContainerClient(containerName);
             var blobClient = blobContainerClient.GetBlobClient(fileName); // blob name

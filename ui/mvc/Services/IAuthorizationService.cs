@@ -4,6 +4,6 @@ namespace PhiDeidPortal.Ui.Services
 {
     public interface IAuthorizationService
     {
-        public bool Authorize(ClaimsPrincipal user);
+        bool HasElevatedRights(ClaimsPrincipal user);
     }
 }

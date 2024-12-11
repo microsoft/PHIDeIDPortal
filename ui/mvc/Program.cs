@@ -18,6 +18,7 @@ using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensibility;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
+using Microsoft.FeatureManagement;
 using PhiDeidPortal.Ui.Services;
 using System.Net.Http;
 
@@ -28,6 +29,8 @@ namespace PhiDeidPortal.Ui
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.AddFeatureManagement();
 
             builder.Services.Configure<CookiePolicyOptions>(options =>
             {
@@ -70,9 +73,10 @@ namespace PhiDeidPortal.Ui
                 return blobServiceClient;
             });
 
+            builder.Services.AddTransient<IFeatureService, FeatureService>();
             builder.Services.AddSingleton<IBlobService, BlobService>(x =>
             {
-                var blobService = new BlobService(blobServiceClient);
+                var blobService = new BlobService(builder.Configuration);
                 return blobService;
             });
 

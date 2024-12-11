@@ -1,0 +1,115 @@
+﻿@using PhiDeidPortal.Ui.ViewComponents
+@using PhiDeidPortal.Ui.Entities
+@model TabbedNavigationViewModel
+
+@{
+    if (!Model.IsFeatureAvailable)
+    {
+        <p></p>
+    }
+    else
+    {
+        <main role="main" class="pb-3">
+            <div>
+                @{
+                    if (Model.PageFeatures.ContainsKey(Feature.Upload) && Model.PageFeatures[Feature.Upload].Equals(true))
+                    {
+                        <button type="button" class="btn btn-primary upload-button" data-bs-toggle="modal" data-bs-target="#uploadDialog">
+                            <i class="bi bi-upload"></i>
+                            <span>Upload document</span>
+                        </button>
+                    }
+                }
+            </div>
+            <div class="tab-bar row">
+                @{
+                    if (Model.PageFeatures.ContainsKey(Feature.AllDocumentsView) && Model.PageFeatures[Feature.AllDocumentsView].Equals(true))
+                    {
+                        <div class="tab col" data-href="index">
+                            <div class="unhighlight">
+                                <div>
+                                    <div>All My Documents</div>
+                                    <h2>@Model.StatusSummary.TotalCount</h2>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    if (Model.PageFeatures.ContainsKey(Feature.UnprocessedView) && Model.PageFeatures[Feature.UnprocessedView].Equals(true))
+                    {
+                        <div class="tab col" data-href="unprocessed">
+                            <div class="unhighlight">
+                                <div>
+                                    <div><i class="bi bi-filter"></i>Awaiting Processing</div>
+                                    <h2>@Model.StatusSummary.UnprocessedCount</h2>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    if (Model.PageFeatures.ContainsKey(Feature.JustificationView) && Model.PageFeatures[Feature.JustificationView].Equals(true))
+                    {
+                        <div class="tab col" data-href="justification">
+                            <div class="highlight">
+                                <div>
+                                    <div><i class="bi bi-filter"></i>Needs PHI Justification</div>
+                                    <h2>@Model.StatusSummary.JustificationCount</h2>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    if (Model.PageFeatures.ContainsKey(Feature.ManualReviewView) && Model.PageFeatures[Feature.ManualReviewView].Equals(true))
+                    {
+                        <div class="tab col" data-href="review">
+                            <div class="unhighlight">
+                                <div>
+                                    <div><i class="bi bi-filter"></i>Awaiting Manual Review</div>
+                                    <h2>@Model.StatusSummary.ReviewCount</h2>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    if (Model.PageFeatures.ContainsKey(Feature.ApprovedView) && Model.PageFeatures[Feature.ApprovedView].Equals(true))
+                    {
+                        <div class="tab col" data-href="completed">
+                            <div class="unhighlight">
+                                <div>
+                                    <div><i class="bi bi-filter"></i>Approved</div>
+                                    <h2>@Model.StatusSummary.ApprovedCount</h2>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    if (Model.PageFeatures.ContainsKey(Feature.DeniedView) && Model.PageFeatures[Feature.DeniedView].Equals(true))
+                    {
+                        <div class="tab col" data-href="denied">
+                            <div class="unhighlight">
+                                <div>
+                                    <div><i class="bi bi-filter"></i>Denied</div>
+                                    <h2>@Model.StatusSummary.DeniedCount</h2>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+            <div>
+                @{
+                    if (Model.PageFeatures.ContainsKey(Feature.Search) && Model.PageFeatures[Feature.Search].Equals(true))
+                    {
+                        <div class="row search-row">
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="(Optional) Enter search terms. Use * to prefix match. Use + to match multiple terms." />
+                                <!-- if model is auth -->
+                                <button class="btn btn-secondary viewall-button" type="button" data-viewall="all" aria-label="View just my items"><i class="bi bi-eye"></i></button>
+                                <button class="btn btn-primary search-button" type="button"><i class="bi bi-search"></i> Search</button>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                }
+            </div>
+        </main>
+    }
+}

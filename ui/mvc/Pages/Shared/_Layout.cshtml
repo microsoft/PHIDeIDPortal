@@ -35,78 +35,8 @@
         </nav>
     </header>
     <div class="container">
-        <main role="main" class="pb-3">
-            <div>
-                <button type="button" class="btn btn-primary upload-button" data-bs-toggle="modal" data-bs-target="#uploadDialog">
-                    <i class="bi bi-upload"></i>
-                    <span>Upload document</span>
-                </button>
-            </div>
-            <div class="tab-bar row">
-                <div class="tab col" data-href="index">
-                    <div class="unhighlight">
-                        <div>
-                            <div>All My Documents</div>
-                            <h2>@Model.TotalCount</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="tab col" data-href="unprocessed">
-                    <div class="unhighlight">
-                        <div>
-                            <div><i class="bi bi-filter"></i>Awaiting Processing</div>
-                            <h2>@Model.UnprocessedCount</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="tab col" data-href="justification">
-                    <div class="highlight">
-                        <div>
-                            <div><i class="bi bi-filter"></i>Needs PHI Justification</div>
-                            <h2>@Model.JustificationCount</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="tab col" data-href="review">
-                    <div class="unhighlight">
-                        <div>
-                            <div><i class="bi bi-filter"></i>Awaiting Manual Review</div>
-                            <h2>@Model.ReviewCount</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="tab col" data-href="completed">
-                    <div class="unhighlight">
-                        <div>
-                            <div><i class="bi bi-filter"></i>Approved</div>
-                            <h2>@Model.ApprovedCount</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="tab col" style="border-right:none;" data-href="denied">
-                    <div class="unhighlight">
-                        <div>
-                            <div><i class="bi bi-filter"></i>Denied</div>
-                            <h2>@Model.DeniedCount</h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <div class="row search-row">
-
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="(Optional) Enter search terms. Use * to prefix match. Use + to match multiple terms." />
-                        @if (Model.IsAuthorized) {<button class="btn btn-secondary viewall-button" type="button" data-viewall="all" aria-label="View just my items"><i class="bi bi-eye"></i></button>}
-                        <button class="btn btn-primary search-button" type="button"><i class="bi bi-search"></i> Search</button>
-                    </div>
-
-
-
-                </div>
-            </div>
-            @RenderBody()
-        </main>
+        @await Component.InvokeAsync("TabbedNavigation")
+        @RenderBody()
     </div>
 
     <!-- Upload modal -->
@@ -118,7 +48,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    @await Html.PartialAsync("Upload", new UploadModel())
+                    @await Component.InvokeAsync("Upload")
                 </div>
             </div>
         </div>
