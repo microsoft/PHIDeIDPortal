@@ -1,5 +1,13 @@
 {
   "dependencies": {
+    "secrets1": {
+      "type": "secrets"
+    },
+    "cosmosdb1": {
+      "type": "cosmosdb",
+      "connectionId": "dbConnection",
+      "dynamicId": null
+    },
     "storage1": {
       "type": "storage",
       "connectionId": "AzureWebJobsStorage"
