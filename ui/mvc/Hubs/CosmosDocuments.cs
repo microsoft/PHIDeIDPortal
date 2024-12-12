@@ -30,7 +30,7 @@ namespace PhiDeidPortal.Ui.Hubs
             _userContextService = userContextService;
         }
 
-        public async Task UpdateCounts(CosmosDbDocument doc)
+        public async Task UpdateCounts(CosmosRecord cosmosRecord)
         {
             var currentUser = _userContextService.User;
             if (currentUser == null)
@@ -48,12 +48,6 @@ namespace PhiDeidPortal.Ui.Hubs
         }
     }
 
-    public class CosmosDbDocument
-    {
-        public string User { get; set; }
-        public string Message { get; set; }
-    }
-
     public interface IUserContextService
     {
         ClaimsPrincipal User { get; set; }
@@ -66,5 +60,18 @@ namespace PhiDeidPortal.Ui.Hubs
         public ClaimsPrincipal User { get; set; }
         public bool HasElevatedRights { get; set; }
         public bool ViewFilter { get; set; }
+    }
+
+    public class CosmosRecord
+    {
+        public string id { get; set; }
+        public string Uri { get; set; }
+        public string FileName { get; set; }
+        public string Status { get; set; }
+        public string Author { get; set; }
+        public bool AwaitingIndex { get; set; }
+        public string JustificationText { get; set; }
+        public DateTime LastIndexed { get; set; }
+        public string[] OrganizationalMetadata { get; set; }
     }
 }
