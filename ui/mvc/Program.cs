@@ -1,4 +1,5 @@
 using Azure.Identity;
+using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -20,6 +21,8 @@ using Microsoft.Identity.Web.UI;
 using Microsoft.FeatureManagement;
 using PhiDeidPortal.Ui.Services;
 using System.Net.Http;
+using System.Text.Json;
+using PhiDeidPortal.Ui.Hubs;
 
 namespace PhiDeidPortal.Ui
 {
@@ -28,6 +31,13 @@ namespace PhiDeidPortal.Ui
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.AddSignalR()
+                    .AddJsonProtocol(options =>
+                    {
+                        options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                        options.PayloadSerializerOptions.WriteIndented = true;
+                    });
 
             builder.Services.AddFeatureManagement();
 
@@ -61,8 +71,18 @@ namespace PhiDeidPortal.Ui
                     options.Filters.Add(new AuthorizeFilter(policy));
                 }).AddMicrosoftIdentityUI();
 
-            builder.Services.AddTransient<IFeatureService, FeatureService>();
+            var configuration = builder.Configuration.GetSection("StorageAccount");
+            var storageAccountUri = configuration["Uri"];
+            var credential = new StorageSharedKeyCredential(configuration["Name"], configuration["ApiKey"]);
+            var blobServiceClient = new BlobServiceClient(new Uri(storageAccountUri), credential);
 
+
+            builder.Services.AddSingleton(x =>
+            {
+                return blobServiceClient;
+            });
+
+            builder.Services.AddTransient<IFeatureService, FeatureService>();
             builder.Services.AddSingleton<IBlobService, BlobService>(x =>
             {
                 var blobService = new BlobService(builder.Configuration);
@@ -80,6 +100,9 @@ namespace PhiDeidPortal.Ui
                 var authorizationService = new AuthorizationService(builder.Configuration);
                 return authorizationService;
             });
+
+            builder.Services.AddSingleton<IUserContextService, UserContextService>();
+
 
             // Use a Singleton instance of the SocketsHttpHandler, which you can share across any HttpClient in your application
             SocketsHttpHandler socketsHttpHandler = new SocketsHttpHandler();
@@ -137,11 +160,15 @@ namespace PhiDeidPortal.Ui
 
             app.UseStaticFiles();
 
-            app.UseRouting();
+            app.UseRouting();            
 
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            app.UseEndpoints(endpoints => 
+            {
+                endpoints.MapHub<CosmosDocuments>("/cosmosdocuments");
+                endpoints.MapControllers(); 
+            });
 
             app.MapRazorPages();
 

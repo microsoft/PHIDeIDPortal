@@ -11,11 +11,13 @@ namespace PhiDeidPortal.Ui.Pages
 {
     [Authorize]
     [FeatureGate(Feature.JustificationView)]
-    public class JustificationModel(IAuthorizationService authorizationService, IAISearchService searchService, IFeatureService featureService) : PageModel
+    public class JustificationModel(IAuthorizationService authorizationService, IAISearchService searchService, IFeatureService featureService, ICosmosService cosmosService) : PageModel
     {
         private readonly IAISearchService _searchService = searchService;
         private readonly IAuthorizationService _authService = authorizationService;
         private readonly IFeatureService _featureService = featureService;
+        private readonly ICosmosService _cosmosService = cosmosService;
+
         public Pageable<SearchResult<SearchDocument>>? Results { get; private set; }
         public bool IsDeleteFeatureAvailable { get; private set; }
         public bool IsDownloadFeatureAvailable { get; private set; }
@@ -32,6 +34,12 @@ namespace PhiDeidPortal.Ui.Pages
 
             IsDeleteFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Delete);
             IsDownloadFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Download);
+        }
+        
+        public async Task<(string, bool)> GetMetadataRecord(string uri)
+        {
+            var document = _cosmosService.GetMetadataRecordByUri(uri);
+            return document is null ? ("No justification provided.", document.AwaitingIndex) : (document.JustificationText, document.AwaitingIndex);
         }
     }
 }
