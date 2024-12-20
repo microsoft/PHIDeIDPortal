@@ -14,6 +14,7 @@
             <th>Status</th>
             <th>Last Indexed</th>
             <th nowrap>Metadata</th>
+            <th>Indexing</th>
         </tr>
     </thead>
     <tbody>
@@ -56,6 +57,7 @@
                         }
                     }
                 </td>
+                <td style="vertical-align: top;">@(result.AwaitingIndex ? Html.Raw("<i class='bi bi-check'></i>") : Html.Raw("<i></i>"))</td>
             </tr>
 
             i++;

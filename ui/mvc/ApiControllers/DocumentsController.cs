@@ -1,21 +1,12 @@
-﻿using Azure.Search.Documents.Models;
-using Azure.Search.Documents;
-using Azure;
-using Azure.Storage.Blobs;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Runtime.CompilerServices;
 using Microsoft.Azure.Cosmos;
-using PhiDeidPortal.Ui;
-using PhiDeidPortal.Ui.Services;
-using PhiDeidPortal.Ui.Entities;
-using Microsoft.AspNetCore.Razor.TagHelpers;
-using System;
-using System.Net;
-using System.Reflection.Metadata;
-using System.Xml.Linq;
-using System.Text.RegularExpressions;
 using Microsoft.FeatureManagement.Mvc;
+using PhiDeidPortal.Ui.Entities;
+using PhiDeidPortal.Ui.Services;
+using System.Net;
+using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace PhiDeidPortal.Ui.Controllers
 {
@@ -51,7 +42,7 @@ namespace PhiDeidPortal.Ui.Controllers
         [FeatureGate(Feature.Download)]
         public async Task<IActionResult> Get(string filename)
         {
-         //   if (!_featureService.IsFeatureEnabled(Feature.Download)) return NotFound();
+            //   if (!_featureService.IsFeatureEnabled(Feature.Download)) return NotFound();            
 
             return new FileStreamResult(
                 await _blobService.GetDocumentStreamAsync(_containerName, filename),

@@ -22,7 +22,11 @@
                     if (Model.Results is null) return;
                     @foreach (SearchResult<SearchDocument> result in Model.Results)
                     {
+                        var (text, awaitingIndexing) = await @Model.GetMetadataRecord(result.Document["metadata_storage_path"].ToString());
+                        if (awaitingIndexing) continue;
+                        
                         var piiHover = (((String)result.Document["piiEntities"]) == "[]") ?
+
                         "<div class='piiHover containsNoPii bg-success'>This document does not contain PII/PHI identified content.</div>" :
                         "<div class='piiHover containsPii bg-danger'>This document contains PII/PHI identified content. Click to view more...</div>";
 
@@ -45,7 +49,6 @@
                                 <div style="padding: 0 !important; margin-top: 8px;" class="row">
                                     <div>
                                         @{
-                                            var text = await @Model.GetJustificationText(result.Document["metadata_storage_path"].ToString());
                                             <textarea class="form-control submit-justification-text" rows="2">@text</textarea>
                                         }
                                     </div>
@@ -58,6 +61,7 @@
                                         }
                                         <button class="btn btn-success approve-button" type="button" data-href='@result.Document["metadata_storage_path"]'><i class="bi bi-check-lg"></i> Approve</button>
                                         <button class="btn btn-danger deny-button" type="button" data-href='@result.Document["metadata_storage_path"]'><i class="bi bi-x-lg"></i> Deny</button>
+                                        <span>&nbsp;Awaiting Indexing: @awaitingIndexing</span>
                                     </div>
                                 </div>
                             </td>

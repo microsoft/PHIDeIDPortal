@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
 using PhiDeidPortal.Ui.Entities;
+using PhiDeidPortal.Ui.Hubs;
 using PhiDeidPortal.Ui.Services;
 using System.Security.Claims;
 
@@ -13,14 +14,28 @@ namespace PhiDeidPortal.Ui.ViewComponents
         private readonly ICosmosService _cosmosService;
         private readonly IAuthorizationService _authService;
         private readonly IFeatureService _featureService;
+        private readonly IUserContextService _userContextService;
 
-        public TabbedNavigationViewComponent(IAISearchService indexQueryer, CosmosClient cosmosClient, IAuthorizationService authService, ICosmosService cosmosService, IFeatureService featureService)
+        public TabbedNavigationViewComponent(IAISearchService indexQueryer, CosmosClient cosmosClient, IAuthorizationService authService, ICosmosService cosmosService, IFeatureService featureService, IUserContextService userContextService)
         {
             _indexQueryer = indexQueryer;
             _cosmosClient = cosmosClient;
             _authService = authService;
             _cosmosService = cosmosService;
             _featureService = featureService;
+            _userContextService = userContextService;
+        }
+
+        public StatusSummary GetSummary()
+        {
+            var isElevated = _authService.HasElevatedRights((ClaimsPrincipal)User);
+            var viewFilter = Request.Query["v"].ToString().ToLower() == "me";
+
+            _userContextService.User = (ClaimsPrincipal)User;
+            _userContextService.HasElevatedRights = isElevated;
+            _userContextService.ViewFilter = viewFilter;
+
+            return (isElevated && !viewFilter) ? _cosmosService.GetSummary() : _cosmosService.GetSummaryByAuthor(User.Identity.Name);
         }
 
         public async Task<IViewComponentResult> InvokeAsync()
@@ -29,17 +44,13 @@ namespace PhiDeidPortal.Ui.ViewComponents
                 return View(new TabbedNavigationViewModel() { IsFeatureAvailable = false });
 
             if (User.Identity?.Name is null) 
-                return View(new TabbedNavigationViewModel() { IsFeatureAvailable = false });
-
-            var isElevated = _authService.HasElevatedRights((ClaimsPrincipal)User);
-            var viewFilter = Request.Query["v"].ToString().ToLower() == "me";
-            
-            var summary = (isElevated && !viewFilter) ? _cosmosService.GetSummary() : _cosmosService.GetSummaryByAuthor(User.Identity.Name);
+                return View(new TabbedNavigationViewModel() { IsFeatureAvailable = false });            
+                        
 
             var viewModel = new TabbedNavigationViewModel()
             {
                 IsFeatureAvailable = true,
-                StatusSummary = summary
+                StatusSummary = GetSummary()                
             };
 
             viewModel.PageFeatures.Add(Feature.AllDocumentsView, _featureService.IsFeatureEnabled(Feature.AllDocumentsView));

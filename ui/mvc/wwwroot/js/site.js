@@ -119,7 +119,7 @@ phideid.ui = (function () {
                 success: function (data) {
                     $(".loading").hide();
                     $("#uploadDialog").modal('hide');
-                    phideid.ui.showToast("Document uploaded.", false, true);
+                    phideid.ui.showToast("Document uploaded.", false, false);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     $(".upload-error-2").html(`There was an error uploading the document: ${XMLHttpRequest.responseText}`, true, false);
@@ -228,8 +228,9 @@ phideid.ui = (function () {
                 contentType: 'application/json',
                 success: function (data) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("Document updated.",false,true);
-                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
+                    phideid.ui.showToast("Document updated.",false,false);
+                    // phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
+                    $(`div[data-id='${id}']`).closest("tr").remove();
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
@@ -264,7 +265,7 @@ phideid.ui = (function () {
                 contentType: 'application/json',
                 success: function (data) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("Document updated.",false,true);
+                    phideid.ui.showToast("Document updated.",false,false);
                     phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -277,8 +278,7 @@ phideid.ui = (function () {
             });
         },
 
-        deleteDocument(id, uri, indexOnly) {
-
+        async deleteDocument(id, uri, indexOnly) {
             var formData = {};
             formData.key = id;
             formData.uri = uri;
@@ -287,23 +287,25 @@ phideid.ui = (function () {
 
             phideid.ui.showLoadingIndicator();
 
-            $.ajax({
-                url: endpoint,
-                type: 'POST',
-                data: JSON.stringify(formData),
-                contentType: 'application/json',
-                success: function (data) {
-                    phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("Document deleted.",false,true);
-                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast(`There was an error deleting the document: ${XMLHttpRequest.responseText}`,true,false);
-                    phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
-                }
+            try {
+                let response = await $.ajax({
+                    url: endpoint,
+                    type: 'POST',
+                    data: JSON.stringify(formData),
+                    contentType: 'application/json'
+                });
+                phideid.ui.hideLoadingIndicator();
+                phideid.ui.showToast("Document deleted.", false, false);
+                phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
 
-            });
+                setTimeout(function () {
+                    location.reload();
+                }, 3000);
+            } catch (error) {
+                phideid.ui.hideLoadingIndicator();
+                phideid.ui.showToast(`There was an error deleting the document: ${error.responseText}`, true, false);
+                phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
+            }
         },
 
         reindex() {
@@ -314,7 +316,7 @@ phideid.ui = (function () {
                 type: 'POST',
                 success: function (data) {
                     phideid.ui.hideLoadingIndicator();
-                    phideid.ui.showToast("Documents reindexed.",false,true);
+                    phideid.ui.showToast("Documents reindexed.",false,false);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
@@ -344,15 +346,48 @@ $(document).ready(function () {
         phideid.ui.showPIIDetails($(this).children('.piiDetails'), $('#piiDialog'), $('#piiEntitiesContent'));
     });
     $('#addTag').bind('click', function () { phideid.ui.addUploadTag($("#uploadTagEntry").val(), $("#uploadTagCloud"), $("#uploadTags")); $("#uploadTagEntry").val("") });
-    $('#submitUpload').bind('click', function () { phideid.ui.submitUpload($("#uploadForm")); });
-    $(".upload-button").bind('click', function () { phideid.ui.resetUpload($("#uploadForm")); });
+
+    $('#submitUpload').bind('click', function () {
+        phideid.ui.submitUpload($("#uploadForm"));
+        location.reload();
+    });
+
+    $(".upload-button").bind('click', function () {
+        phideid.ui.resetUpload($("#uploadForm"));
+    });
+
     $('#uploadTagEntry').bind('keypress', function (e) { phideid.ui.preventNonAlphaNumericKeys(e); });
     $(".search-row .search-button").bind("click", function () { phideid.ui.search() });
     $(".submit-justification-text").bind("keyup", function (e) { var isValid = phideid.ui.checkInputLength($(this), 3); var btn = $(this).parents(".row").find(".submit-justification-button"); if (isValid) { $(btn).removeAttr("disabled"); } else { $(btn).attr("disabled", "disabled"); } });
-    $(".submit-justification-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); var uri = $(this).attr("data-href"); phideid.ui.submitDocumentJustification(id, uri, comment); });
-    $(".approve-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); var uri = $(this).attr("data-href"); phideid.ui.updateDocumentStatus(id, uri, 4); });
-    $(".deny-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val(); var uri = $(this).attr("data-href"); phideid.ui.updateDocumentStatus(id, uri, 5); });
-    $(".delete-button").bind("click", function () { var id = $(this).parent().attr("data-id"); var uri = $(this).attr("data-href"); phideid.ui.deleteDocument(id, uri); });
+    $(".submit-justification-button").bind("click", async function () {
+        var id = $(this).parent().attr("data-id");
+        var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val();
+        var uri = $(this).attr("data-href");
+        await phideid.ui.submitDocumentJustification(id, uri, comment);        
+    });
+
+    $(".approve-button").bind("click", async function () {
+        var id = $(this).parent().attr("data-id");
+        var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val();
+        var uri = $(this).attr("data-href");
+        await phideid.ui.updateDocumentStatus(id, uri, 4);
+        $(this).closest("tr").remove();
+    });
+
+    $(".deny-button").bind("click", async function () {
+        var id = $(this).parent().attr("data-id");
+        var comment = $(this).parents(".redacted-content-td").find(".submit-justification-text").val();
+        var uri = $(this).attr("data-href");
+        await phideid.ui.updateDocumentStatus(id, uri, 5);
+        $(this).closest("tr").remove();
+    });
+    $(".delete-button").bind("click", async function () {
+        var id = $(this).parent().attr("data-id");
+        var uri = $(this).attr("data-href");
+        await phideid.ui.deleteDocument(id, uri);
+        $(this).closest("tr").remove();        
+    });
+
     $(".download-button").bind("click", function () { var file = $(this).attr("data-href"); phideid.ui.downloadFile(file); });
     $(".viewall-button").bind("click", function () { phideid.ui.toggleViewAll(); });
 });
