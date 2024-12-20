@@ -45,7 +45,7 @@ namespace PhiDeidPortal.Ui.Pages
         public async Task<(string, bool)> GetMetadataRecord(string uri)
         {
             var document = _cosmosService.GetMetadataRecordByUri(uri);
-            return document is null ? ("No justification provided.", document.AwaitingIndex) : (document.JustificationText, document.AwaitingIndex);
+            return document is null ? ("No justification provided.", false) : (document.JustificationText, document.AwaitingIndex);
         }
 
         public async Task<string> GetJustificationText2(string uri)
