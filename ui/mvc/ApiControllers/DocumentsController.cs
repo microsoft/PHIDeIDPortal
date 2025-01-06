@@ -42,8 +42,6 @@ namespace PhiDeidPortal.Ui.Controllers
         [FeatureGate(Feature.Download)]
         public async Task<IActionResult> Get(string filename)
         {
-            //   if (!_featureService.IsFeatureEnabled(Feature.Download)) return NotFound();            
-
             return new FileStreamResult(
                 await _blobService.GetDocumentStreamAsync(_containerName, filename),
                 "application/octet-stream");
@@ -188,7 +186,7 @@ namespace PhiDeidPortal.Ui.Controllers
             if (oldRecord.Status > 2) return Conflict("Document is awaiting reindex. Please refresh and try again.");
 
             MetadataRecord newRecord = new(
-                id: Guid.NewGuid().ToString(),  //oldRecord.id,
+                id: Guid.NewGuid().ToString(),
                 FileName: oldRecord.FileName,
                 Uri: oldRecord.Uri,
                 Author: oldRecord.Author,
