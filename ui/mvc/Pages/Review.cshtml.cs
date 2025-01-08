@@ -27,17 +27,25 @@ namespace PhiDeidPortal.Ui.Pages
             var viewFilter = Request.Query["v"].ToString().ToLower() == "me";
             var searchString = Request.Query["q"].ToString();
             var isElevated = _authService.HasElevatedRights(User);
-            var searchFilter = $"status eq 3";
+            var searchFilter = $"status eq 3 or status eq 2";
 
             Results = (isElevated && !viewFilter) ? _searchService.SearchAsync(searchFilter, searchString).Result : _searchService.SearchByAuthorAsync(User.Identity.Name, searchFilter, searchString).Result;
+            foreach(var result in Results)
+            {
+                if (result.Document["status"].ToString() == "3")
+                {
+                    var mdr = GetMetadataRecord(result.Document["metadata_storage_path"].ToString());
+                }
+            }
+            
             UserHasElevatedRights = isElevated;
             IsDownloadFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Download);
         }
 
-        public async Task<string> GetJustificationText(string uri)
+        public async Task<(string, bool)> GetMetadataRecord(string uri)
         {
             var document = _cosmosService.GetMetadataRecordByUri(uri);
-            return document is null ? "No justification provided." : document.JustificationText;
+            return document is null ? ("No justification provided.", false) : (document.JustificationText, document.AwaitingIndex);
         }
     }
 }
