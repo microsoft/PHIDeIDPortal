@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using PhiDeidPortal.Ui.Entities;
-using PhiDeidPortal.Ui.Interfaces;
 using PhiDeidPortal.Ui.Services;
 
 namespace PhiDeidPortal.Ui.Hubs
