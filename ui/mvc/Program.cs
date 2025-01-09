@@ -22,6 +22,7 @@ using PhiDeidPortal.Ui.Services;
 using System.Net.Http;
 using System.Text.Json;
 using PhiDeidPortal.Ui.Hubs;
+using PhiDeidPortal.Ui.Interfaces;
 
 namespace PhiDeidPortal.Ui
 {

@@ -2,6 +2,7 @@
 using Microsoft.Azure.Cosmos;
 using PhiDeidPortal.Ui.Entities;
 using PhiDeidPortal.Ui.Hubs;
+using PhiDeidPortal.Ui.Interfaces;
 using PhiDeidPortal.Ui.Services;
 using System.Security.Claims;
 
