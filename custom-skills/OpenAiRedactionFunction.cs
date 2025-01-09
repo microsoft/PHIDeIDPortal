@@ -7,6 +7,9 @@ using OpenAI.Chat;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using AISearch.CustomFunctions;
+using Microsoft.Extensions.Configuration;
+using Azure.Core;
+using Azure.Identity;
 
 
 namespace ChatCompletion;
@@ -18,6 +21,12 @@ public class OpenAI_StructuredOutputs()
     public async Task<IActionResult> RedactSensitiveInfoWithOpenAI(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
     {
+        IConfiguration config = new ConfigurationBuilder()
+           .AddEnvironmentVariables()
+           .Build();
+        string redactionPrompt = config["PII_REDACTION_PROMPT"] ?? "";
+        TokenCredential credentials = new DefaultAzureCredential();
+
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
         OpenAiRedactionInputRecord inputRecord;
 
@@ -39,7 +48,7 @@ public class OpenAI_StructuredOutputs()
             .AddAzureOpenAIChatCompletion(
                 deploymentName: Environment.GetEnvironmentVariable("OPENAI_DEPLOYMENT_NAME"),
                 endpoint: Environment.GetEnvironmentVariable("OPENAI_ENDPOINT"),
-                apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY"))
+                credentials: credentials)
             .Build();
 
         ChatResponseFormat chatResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
@@ -76,149 +85,7 @@ public class OpenAI_StructuredOutputs()
             ResponseFormat = chatResponseFormat
         };
 
-        var result = await kernel.InvokePromptAsync("""
-                Instructions:
-
-                Identify PII: Include but are not limited to:
-
-                Names, dates of birth, addresses, phone numbers, email addresses, social security numbers, medical record numbers.
-                Employment details, educational history, specific location markers (e.g., home, work, or notable landmarks).
-                Contextual mentions of specific affiliations (e.g., company names, organizational roles, job descriptions).
-                Identify PHI: Include all health-related information that can be tied to an individual, such as:
-
-                Medical diagnoses, treatment plans, medications, encounter dates, and vitals.
-                Healthcare provider names, healthcare facility locations, or any other data that connects a person's health condition to their identity.
-                Guidelines for Exclusions:
-
-                Do not include text containing "[Redacted]" as PII or PHI since it has been anonymized.
-                Generic or non-identifiable health information without associated PII should not be flagged as PHI.
-                Output Details:
-
-                Include a boolean property PiiFound to indicate whether any PII or PHI was found.
-                For each detected item, provide:
-                Text: The exact string that contains PII or PHI.
-                Type: A classification (e.g., "Name," "Date of Birth," "Medical Record Number," "Diagnosis").
-                Context: Additional surrounding text to provide clarity on the detected information.
-
-
-                Example 1
-                Example Input:
-
-                "Employee ID: 123456789 is assigned to [Redacted]. Contact him at +1-555-123-4567 for urgent matters. The SSN is 987-65-4321."
-
-                Example Output:
-                {
-                    "PiiFound": true,
-                    "PiiDetails": [
-                        {
-                            "Text": "123456789",
-                            "Type": "Employee ID",
-                            "Context": "Employee ID: 123456789 is assigned to"
-                        },
-                        {
-                            "Text": "+1-555-123-4567",
-                            "Type": "Phone Number",
-                            "Context": "Contact him at +1-555-123-4567 for urgent matters"
-                        },
-                        {
-                            "Text": "987-65-4321",
-                            "Type": "SSN",
-                            "Context": "The SSN is 987-65-4321"
-                        }
-                    ]
-                }
-                Example 2
-                Example Input:
-
-                "The new hire, Jane Doe, uses jane.doe@example.com. Her office key card ID is 87654321. Please don't share this with [Redacted]."
-
-                Example Output:
-                {
-                    "PiiFound": true,
-                    "PiiDetails": [
-                        {
-                            "Text": "Jane Doe",
-                            "Type": "Name",
-                            "Context": "The new hire, Jane Doe, uses"
-                        },
-                        {
-                            "Text": "jane.doe@example.com",
-                            "Type": "Email",
-                            "Context": "uses jane.doe@example.com"
-                        },
-                        {
-                            "Text": "87654321",
-                            "Type": "Office Key Card ID",
-                            "Context": "Her office key card ID is 87654321"
-                        }
-                    ]
-                }
-                Example 3
-                Example Input:
-
-                "Please verify the transaction made by card ending in 4321. The account holder is [Redacted], but the transaction seems suspicious."
-
-                Example Output:
-                {
-                    "PiiFound": false,
-                    "PiiDetails": []
-                }
-                Example 4
-                Example Input:
-
-                "Here are the client details: Name: Alexander Hamilton, DOB: 1757-01-11, Address: 140 Hamilton Ave, Elizabethtown, NJ."
-
-                Example Output:
-                {
-                    "PiiFound": true,
-                    "PiiDetails": [
-                        {
-                            "Text": "Alexander Hamilton",
-                            "Type": "Name",
-                            "Context": "Name: Alexander Hamilton"
-                        },
-                        {
-                            "Text": "1757-01-11",
-                            "Type": "Date of Birth",
-                            "Context": "DOB: 1757-01-11"
-                        },
-                        {
-                            "Text": "140 Hamilton Ave, Elizabethtown, NJ",
-                            "Type": "Address",
-                            "Context": "Address: 140 Hamilton Ave, Elizabethtown, NJ"
-                        }
-                    ]
-                }
-                Example 5
-                Example Input:
-
-                "The document mentions John Smith, phone: +44 20 7946 0958, and passport number: 123456789. Make sure these details are secure."
-
-                Example Output:
-                {
-                    "PiiFound": true,
-                    "PiiDetails": [
-                        {
-                            "Text": "John Smith",
-                            "Type": "Name",
-                            "Context": "The document mentions John Smith"
-                        },
-                        {
-                            "Text": "+44 20 7946 0958",
-                            "Type": "Phone Number",
-                            "Context": "phone: +44 20 7946 0958"
-                        },
-                        {
-                            "Text": "123456789",
-                            "Type": "Passport Number",
-                            "Context": "passport number: 123456789"
-                        }
-                    ]
-                }
-
-                ACTUAL INPUT:
-
-            """ + inputRecord.Data.Text, new(executionSettings));
+        var result = await kernel.InvokePromptAsync(redactionPrompt + inputRecord.Data.Text, new(executionSettings));
 
         var resultString = result.GetValue<String>();
         var piiDetectionResult = JsonConvert.DeserializeObject<PiiDetectionResult>(resultString);
