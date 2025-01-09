@@ -1,4 +1,6 @@
 using AISearch.CustomFunctions;
+using custom_skills.Models;
+using custom_skills.Utilities;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Azure.Functions.Worker;
@@ -6,7 +8,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace CosmosDBMonitor
 {
@@ -38,11 +39,11 @@ namespace CosmosDBMonitor
 
         [Function("CosmosDbTriggerFunction")]
         public async Task Run([CosmosDBTrigger(
-    databaseName: "%databaseName%",
-    containerName: "%containerName%",
-    Connection = "dbConnection",
-    LeaseContainerName = "leases",
-    CreateLeaseContainerIfNotExists = true)] IReadOnlyList<object> objects)
+                                databaseName: "%databaseName%",
+                                containerName: "%containerName%",
+                                Connection = "dbConnection",
+                                LeaseContainerName = "leases",
+                                CreateLeaseContainerIfNotExists = true)] IReadOnlyList<object> objects)
         {
             if (objects != null && objects.Count > 0)
             {
@@ -136,47 +137,6 @@ namespace CosmosDBMonitor
             }
 
             await _hubConnection.SendAsync("UpdateCounts", cosmosRecord);
-        }
-    }
-
-    public class CosmosRecordRaw
-    {
-        public string id { get; set; }
-        public string Uri { get; set; }
-        public string FileName { get; set; }
-        [JsonConverter(typeof(StatusConverter))]
-        public string Status { get; set; }
-        public string Author { get; set; }
-        public bool AwaitingIndex { get; set; }
-        public string JustificationText { get; set; }
-        public DateTime LastIndexed { get; set; }
-        public string[] OrganizationalMetadata { get; set; }
-        public string _rid { get; set; }
-        public string _self { get; set; }
-        public string _etag { get; set; }
-        public string _attachments { get; set; }
-        public int _ts { get; set; }
-        public int _lsn { get; set; }
-    }
-
-    public class StatusConverter : JsonConverter<string>
-    {
-        public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            if (reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out int intValue))
-            {
-                return intValue.ToString();
-            }
-            else if (reader.TokenType == JsonTokenType.String)
-            {
-                return reader.GetString();
-            }
-            throw new JsonException("Unexpected token type for Status field");
-        }
-
-        public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
-        {
-            writer.WriteStringValue(value);
         }
     }
 }
