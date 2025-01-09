@@ -1,5 +1,4 @@
-﻿using PhiDeidPortal.Ui.Interfaces;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 
 namespace PhiDeidPortal.Ui.Services
 {
