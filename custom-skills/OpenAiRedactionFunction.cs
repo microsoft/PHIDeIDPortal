@@ -25,7 +25,7 @@ public class OpenAI_StructuredOutputs()
            .Build();
         string redactionPrompt = config["PII_REDACTION_PROMPT"] ?? "";
         
-        bool useManagedIdentity = bool.Parse(Environment.GetEnvironmentVariable("USE_MANAGED_IDENTITY") ?? "false");
+        bool useManagedIdentity = bool.Parse(Environment.GetEnvironmentVariable("USE_ENTRA_AUTH") ?? "false");
         TokenCredential credential = useManagedIdentity 
             ? new DefaultAzureCredential()
             : new AzureKeyCredential(Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
