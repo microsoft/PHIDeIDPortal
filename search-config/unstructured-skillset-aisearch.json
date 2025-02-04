@@ -55,6 +55,32 @@
       ]
     },
     {
+      "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
+      "name": "OpenAiRedactionFunction",
+      "description": "Custom skill for OpenAI-powered content redaction",
+      "context": "/document",
+      "uri": "{openai-function-uri}",
+      "httpMethod": "POST",
+      "timeout": "PT30S",
+      "batchSize": 1000,
+      "inputs": [
+        {
+          "name": "text",
+          "source": "/document/mergeSkillOutput"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "redactedText",
+          "targetName": "wordSkillRedactedContentOutput"
+        },
+        {
+          "name": "redactedEntities",
+          "targetName": "customSkillRedactedEntities"
+        }
+      ]
+    },
+    {
       "@odata.type": "#Microsoft.Skills.Text.PIIDetectionSkill",
       "name": "PIIDetectionSkill",
       "description": "Detects PII in merged document content",
@@ -69,7 +95,7 @@
       "inputs": [
         {
           "name": "text",
-          "source": "/document/mergeSkillOutput"
+          "source": "/document/openAiRedactionOutput"
         }
       ],
       "outputs": [
