@@ -59,9 +59,9 @@
       "name": "OpenAiRedactionFunction",
       "description": "Custom skill for OpenAI-powered content redaction",
       "context": "/document",
-      "uri": "{openai-function-uri}",
+      "uri": "{uri}",
       "httpMethod": "POST",
-      "timeout": "PT30S",
+      "timeout": "PT1M",
       "batchSize": 1000,
       "inputs": [
         {
