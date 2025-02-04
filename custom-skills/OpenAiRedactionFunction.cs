@@ -51,7 +51,7 @@ public class OpenAI_StructuredOutputs()
             .AddAzureOpenAIChatCompletion(
                 deploymentName: Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME"),
                 endpoint: Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT"),
-                credential: credential)
+                credentials: credential)
             .Build();
 
         ChatResponseFormat chatResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
