@@ -49,8 +49,8 @@ public class OpenAI_StructuredOutputs()
 
         Kernel kernel = Kernel.CreateBuilder()
             .AddAzureOpenAIChatCompletion(
-                deploymentName: Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME"),
-                endpoint: Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT"),
+                deploymentName: Environment.GetEnvironmentVariable("OPENAI_DEPLOYMENT_NAME"),
+                endpoint: Environment.GetEnvironmentVariable("OPENAI_ENDPOINT"),
                 credentials: credential)
             .Build();
 
