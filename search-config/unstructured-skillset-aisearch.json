@@ -81,35 +81,6 @@
       ]
     },
     {
-      "@odata.type": "#Microsoft.Skills.Text.PIIDetectionSkill",
-      "name": "PIIDetectionSkill",
-      "description": "Detects PII in merged document content",
-      "context": "/document",
-      "defaultLanguageCode": "en",
-      "minimumPrecision": 0,
-      "maskingMode": "replace",
-      "maskingCharacter": "*",
-      "modelVersion": null,
-      "piiCategories": [],
-      "domain": "none",
-      "inputs": [
-        {
-          "name": "text",
-          "source": "/document/openAiRedactionOutput"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "piiEntities",
-          "targetName": "detectionSkillEntitiesOutput"
-        },
-        {
-          "name": "maskedText",
-          "targetName": "detectionSkillTextOutput"
-        }
-      ]
-    },
-    {
       "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
       "name": "RegexRedactionFunction",
       "description": "Custom skill to redact from a list of defined regular expressions",

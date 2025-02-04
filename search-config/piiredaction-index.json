@@ -23,24 +23,6 @@
       "synonymMaps": []
     },
     {
-      "name": "piiEntities",
-      "type": "Edm.String",
-      "searchable": true,
-      "filterable": true,
-      "retrievable": true,
-      "stored": true,
-      "sortable": false,
-      "facetable": false,
-      "key": false,
-      "indexAnalyzer": null,
-      "searchAnalyzer": null,
-      "analyzer": "standard.lucene",
-      "normalizer": null,
-      "dimensions": null,
-      "vectorSearchProfile": null,
-      "synonymMaps": []
-    },
-    {
       "name": "metadata_storage_name",
       "type": "Edm.String",
       "searchable": true,
