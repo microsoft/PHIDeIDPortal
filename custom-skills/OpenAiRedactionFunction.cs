@@ -11,7 +11,6 @@ using Microsoft.Extensions.Configuration;
 using Azure.Core;
 using Azure.Identity;
 
-
 namespace ChatCompletion;
 
 public class OpenAI_StructuredOutputs()
@@ -25,7 +24,11 @@ public class OpenAI_StructuredOutputs()
            .AddEnvironmentVariables()
            .Build();
         string redactionPrompt = config["PII_REDACTION_PROMPT"] ?? "";
-        TokenCredential credentials = new DefaultAzureCredential();
+        
+        bool useManagedIdentity = bool.Parse(Environment.GetEnvironmentVariable("USE_ENTRA_AUTH") ?? "false");
+        TokenCredential credential = useManagedIdentity 
+            ? new DefaultAzureCredential()
+            : new AzureKeyCredential(Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
 
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
         OpenAiRedactionInputRecord inputRecord;
@@ -48,7 +51,7 @@ public class OpenAI_StructuredOutputs()
             .AddAzureOpenAIChatCompletion(
                 deploymentName: Environment.GetEnvironmentVariable("OPENAI_DEPLOYMENT_NAME"),
                 endpoint: Environment.GetEnvironmentVariable("OPENAI_ENDPOINT"),
-                credentials: credentials)
+                credentials: credential)
             .Build();
 
         ChatResponseFormat chatResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(

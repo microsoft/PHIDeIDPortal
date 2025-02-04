@@ -55,17 +55,14 @@
       ]
     },
     {
-      "@odata.type": "#Microsoft.Skills.Text.PIIDetectionSkill",
-      "name": "PIIDetectionSkill",
-      "description": "Detects PII in merged document content",
+      "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
+      "name": "OpenAiRedactionFunction",
+      "description": "Custom skill for OpenAI-powered content redaction",
       "context": "/document",
-      "defaultLanguageCode": "en",
-      "minimumPrecision": 0,
-      "maskingMode": "replace",
-      "maskingCharacter": "*",
-      "modelVersion": null,
-      "piiCategories": [],
-      "domain": "none",
+      "uri": "{uri}",
+      "httpMethod": "POST",
+      "timeout": "PT1M",
+      "batchSize": 1000,
       "inputs": [
         {
           "name": "text",
@@ -74,12 +71,12 @@
       ],
       "outputs": [
         {
-          "name": "piiEntities",
-          "targetName": "detectionSkillEntitiesOutput"
+          "name": "redactedText",
+          "targetName": "wordSkillRedactedContentOutput"
         },
         {
-          "name": "maskedText",
-          "targetName": "detectionSkillTextOutput"
+          "name": "redactedEntities",
+          "targetName": "customSkillRedactedEntities"
         }
       ]
     },
