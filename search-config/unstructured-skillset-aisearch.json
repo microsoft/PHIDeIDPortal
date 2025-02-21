@@ -81,42 +81,6 @@
       ]
     },
     {
-      "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
-      "name": "RegexRedactionFunction",
-      "description": "Custom skill to redact from a list of defined regular expressions",
-      "context": "/document",
-      "uri": "{uri}",
-      "httpMethod": "POST",
-      "timeout": "PT30S",
-      "batchSize": 1000,
-      "degreeOfParallelism": null,
-      "inputs": [
-        {
-          "name": "text",
-          "source": "/document/detectionSkillTextOutput"
-        },
-        {
-          "name": "maskingCharacter",
-          "source": "='**'"
-        },
-        {
-          "name": "regexPattern",
-          "source": "='amazon,google,%28%5Cd%7B3%7D%5Cd%7B2%7D%5Cd%7B2%7D%29'"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "redactedText",
-          "targetName": "wordSkillRedactedContentOutput"
-        },
-        {
-          "name": "redactedEntities",
-          "targetName": "customSkillRedactedEntities"
-        }
-      ],
-      "httpHeaders": {}
-    },
-    {
       "@odata.type": "#Microsoft.Skills.Util.ConditionalSkill",
       "name": "ContainsPIICondition",
       "description": "Checks for the existance of PII",
@@ -181,6 +145,32 @@
         }
       ],
       "httpHeaders": {}
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
+      "name": "OpenAIPIIRedactionSkill",
+      "description": "PII redaction using OpenAI's detection capabilities",
+      "context": "/document/merged_content",
+      "uri": "YOUR_FUNCTION_ENDPOINT_HERE",
+      "httpMethod": "POST",
+      "timeout": "PT30S",
+      "batchSize": 1,
+      "degreeOfParallelism": null,
+      "inputs": [
+        {
+          "name": "text",
+          "source": "/document/merged_content"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "piiEntities",
+          "targetName": "piiEntities"
+        }
+      ],
+      "httpHeaders": {
+        "api-key": "YOUR_FUNCTION_KEY_HERE"
+      }
     }
   ],
   "cognitiveServices": {

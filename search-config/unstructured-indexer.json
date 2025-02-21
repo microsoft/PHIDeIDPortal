@@ -1,5 +1,4 @@
 {
-  "@odata.context": "https://{searchinstance}/$metadata#indexers/$entity",
   "@odata.etag": "\"0x8DC5FE9FB6A91C3\"",
   "name": "piiredaction-unstructured",
   "description": "PII Redaction Indexer",

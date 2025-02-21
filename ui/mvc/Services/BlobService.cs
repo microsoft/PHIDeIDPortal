@@ -23,7 +23,11 @@ namespace PhiDeidPortal.Ui.Services
         {
             var blobServiceConfiguration = configuration.GetSection("StorageAccount");
             var storageAccountUri = blobServiceConfiguration["Uri"];
-            _blobServiceClient = new BlobServiceClient(new Uri(storageAccountUri), new DefaultAzureCredential());
+            var storageAccountApiKey = blobServiceConfiguration["ApiKey"];
+
+            var credential = new StorageSharedKeyCredential(blobServiceConfiguration["Name"], blobServiceConfiguration["ApiKey"]);
+
+            _blobServiceClient = new BlobServiceClient(new Uri(storageAccountUri), credential);
         }
 
         public async Task<string> UploadDocumentAsync(IFormFile file, string containerName, string blobName)
