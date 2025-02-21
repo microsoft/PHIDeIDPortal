@@ -31,7 +31,7 @@ public class OpenAI_StructuredOutputs
         // log.LogInformation("OpenAiRedactionFunction processed a request.");
         
         string redactionPrompt = Environment.GetEnvironmentVariable("PII_REDACTION_PROMPT") ?? "";
-        // log.LogInformation($"Using redaction prompt: {redactionPrompt}");
+        log.LogInformation($"Using redaction prompt: {redactionPrompt}");
 
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
         // log.LogInformation($"Received request body: {requestBody}");
@@ -50,6 +50,10 @@ public class OpenAI_StructuredOutputs
 
         try
         {
+            log.LogInformation($"Deployment Name: {Environment.GetEnvironmentVariable("OPENAI_DEPLOYMENT_NAME")}");
+            log.LogInformation($"End Point: {Environment.GetEnvironmentVariable("OPENAI_ENDPOINT")}");            
+            log.LogInformation($"API Key: {Environment.GetEnvironmentVariable("OPENAI_API_KEY")?.Substring(0, 5)}*****{Environment.GetEnvironmentVariable("OPENAI_API_KEY")?.Substring(Environment.GetEnvironmentVariable("OPENAI_API_KEY").Length - 5)}");
+
             kernel = Kernel.CreateBuilder()
             .AddAzureOpenAIChatCompletion(
                 deploymentName: Environment.GetEnvironmentVariable("OPENAI_DEPLOYMENT_NAME"),
