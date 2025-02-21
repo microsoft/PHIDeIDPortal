@@ -1,4 +1,4 @@
-﻿using CosmosDBMonitor;
+using CosmosDBMonitor;
 using System.Text.Json.Serialization;
 using custom_skills.Utilities;
 

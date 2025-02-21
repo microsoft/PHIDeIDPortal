@@ -8,6 +8,10 @@
       "connectionId": "dbConnection",
       "dynamicId": null
     },
+    "compute.function.windows1": {
+      "group": "connections",
+      "type": "compute.function.windows"
+    },
     "storage1": {
       "type": "storage",
       "connectionId": "AzureWebJobsStorage"
