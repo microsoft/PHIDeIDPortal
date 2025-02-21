@@ -28,13 +28,13 @@ public class OpenAI_StructuredOutputs
     public async Task<IActionResult> RedactSensitiveInfoWithOpenAI(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
     {
-        log.LogInformation("OpenAiRedactionFunction processed a request.");
+        // log.LogInformation("OpenAiRedactionFunction processed a request.");
         
-         string redactionPrompt = Environment.GetEnvironmentVariable("PII_REDACTION_PROMPT") ?? "";
-        log.LogInformation($"Using redaction prompt: {redactionPrompt}");
+        string redactionPrompt = Environment.GetEnvironmentVariable("PII_REDACTION_PROMPT") ?? "";
+        // log.LogInformation($"Using redaction prompt: {redactionPrompt}");
 
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        log.LogInformation($"Received request body: {requestBody}");
+        // log.LogInformation($"Received request body: {requestBody}");
         
         var definition = new { Values = new List<OpenAiRedactionInputRecord>()};
         var inputRecord = JsonConvert.DeserializeAnonymousType(requestBody, definition);
@@ -46,14 +46,31 @@ public class OpenAI_StructuredOutputs
         }
 
         log.LogInformation($"Processing {inputRecord.Values.Count} records");
+        Kernel kernel = null;
 
-        Kernel kernel = Kernel.CreateBuilder()
+        try
+        {
+            kernel = Kernel.CreateBuilder()
             .AddAzureOpenAIChatCompletion(
                 deploymentName: Environment.GetEnvironmentVariable("OPENAI_DEPLOYMENT_NAME"),
                 endpoint: Environment.GetEnvironmentVariable("OPENAI_ENDPOINT"),
                 apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
             )
             .Build();
+        }
+        catch (Exception ex)
+        {
+            log.LogError($"Error creating kernel: {ex}");
+
+            if (ex.InnerException != null)
+            {
+                log.LogError($"Error creating kernel: {ex.InnerException}");
+            }
+
+            return new BadRequestResult();
+        }
+
+        log.LogInformation("Kernel created");
 
         ChatResponseFormat chatResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
             jsonSchemaFormatName: "piiDetectionResult",
