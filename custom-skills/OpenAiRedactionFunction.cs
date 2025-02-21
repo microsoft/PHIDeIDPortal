@@ -156,7 +156,7 @@ public class OpenAI_StructuredOutputs
         return new OkObjectResult(outputRecords);
         } catch (Exception ex)
         {
-            log.LogInformation($"We goofed {ex}");
+            log.LogInformation($"**** ERROR **** {Environment.NewLine}{ex}");
         }
         return new BadRequestResult();
     }
