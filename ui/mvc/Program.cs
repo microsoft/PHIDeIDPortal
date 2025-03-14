@@ -71,17 +71,6 @@ namespace PhiDeidPortal.Ui
                     options.Filters.Add(new AuthorizeFilter(policy));
                 }).AddMicrosoftIdentityUI();
 
-            var configuration = builder.Configuration.GetSection("StorageAccount");
-            var storageAccountUri = configuration["Uri"];
-            var credential = new StorageSharedKeyCredential(configuration["Name"], configuration["ApiKey"]);
-            var blobServiceClient = new BlobServiceClient(new Uri(storageAccountUri), credential);
-
-
-            builder.Services.AddSingleton(x =>
-            {
-                return blobServiceClient;
-            });
-
             builder.Services.AddTransient<IFeatureService, FeatureService>();
             builder.Services.AddSingleton<IBlobService, BlobService>(x =>
             {

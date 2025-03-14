@@ -19,8 +19,28 @@ namespace PhiDeidPortal.Ui.Pages
         {
             if (User.Identity?.Name is null) return;
             var viewFilter = Request.Query["v"].ToString().ToLower() == "me";
+            var searchString = Request.Query["q"].ToString();
             var isElevated = _authService.HasElevatedRights(User);
-            Results = (isElevated && !viewFilter) ? _cosmosService.GetMetadataRecordsByStatus(1) : _cosmosService.GetMetadataRecordsByStatusAndAuthor(1,User.Identity.Name);
+
+            var fieldValues = new List<CosmosFieldQueryValue>();
+
+            if (searchString is not null && searchString.Length > 0)
+            {
+                fieldValues.Add(new CosmosFieldQueryValue() { FieldName = "Uri", FieldValue = searchString, IsPrefixMatch = true });
+                fieldValues.Add(new CosmosFieldQueryValue() { FieldName = "Author", FieldValue = searchString, IsPrefixMatch = true });
+                fieldValues.Add(new CosmosFieldQueryValue() { FieldName = "FileName", FieldValue = searchString, IsPrefixMatch = true });
+            }
+
+            if (!isElevated || viewFilter)
+            {
+                fieldValues.Add(new CosmosFieldQueryValue() { FieldName = "Author", FieldValue = User.Identity.Name, IsRequired = true });
+            }
+
+            fieldValues.Add(new CosmosFieldQueryValue() { FieldName = "Status", FieldValue = EnumExtensions.GetDeidStatusValueFromPrefix("Uploaded"), IsRequired = true });
+
+            Results = _cosmosService.QueryMetadataRecords(fieldValues).Result;
+
+
         }
     }
 }

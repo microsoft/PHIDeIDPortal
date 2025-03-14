@@ -5,13 +5,7 @@ namespace PhiDeidPortal.Ui.Services
 {
     public interface ICosmosService
     {
-        List<MetadataRecord> GetAllMetadataRecords();
-        List<MetadataRecord> GetAllMetadataRecordsByAuthor(string author);
-        MetadataRecord? GetMetadataRecordById(string docId);
-        MetadataRecord? GetMetadataRecordByUri(string uri);
-        MetadataRecord? GetMetadataRecordByUriAndAuthor(string uri, string author);
-        List<MetadataRecord> GetMetadataRecordsByStatus(int status);
-        List<MetadataRecord> GetMetadataRecordsByStatusAndAuthor(int status, string author);
+        Task<List<MetadataRecord>> QueryMetadataRecords(List<CosmosFieldQueryValue> fieldValues);
         StatusSummary GetSummary();
         StatusSummary GetSummaryByAuthor(string author);
         Task<ItemResponse<MetadataRecord>> UpsertMetadataRecordAsync(MetadataRecord record);

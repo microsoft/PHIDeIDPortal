@@ -30,13 +30,6 @@ namespace PhiDeidPortal.Ui.Pages
             var searchFilter = $"status eq 3 or status eq 2";
 
             Results = (isElevated && !viewFilter) ? _searchService.SearchAsync(searchFilter, searchString).Result : _searchService.SearchByAuthorAsync(User.Identity.Name, searchFilter, searchString).Result;
-            foreach(var result in Results)
-            {
-                if (result.Document["status"].ToString() == "3")
-                {
-                    var mdr = GetMetadataRecord(result.Document["metadata_storage_path"].ToString());
-                }
-            }
             
             UserHasElevatedRights = isElevated;
             IsDownloadFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Download);
@@ -44,7 +37,9 @@ namespace PhiDeidPortal.Ui.Pages
 
         public async Task<(string, bool)> GetMetadataRecord(string uri)
         {
-            var document = _cosmosService.GetMetadataRecordByUri(uri);
+            var query = new List<CosmosFieldQueryValue> { new CosmosFieldQueryValue { FieldName = "Uri", FieldValue = uri, IsRequired = true } };
+            var documents = await _cosmosService.QueryMetadataRecords(query);
+            var document = documents.FirstOrDefault();
             return document is null ? ("No justification provided.", false) : (document.JustificationText, document.AwaitingIndex);
         }
     }

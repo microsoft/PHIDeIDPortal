@@ -38,7 +38,9 @@ namespace PhiDeidPortal.Ui.Pages
         
         public async Task<(string, bool)> GetMetadataRecord(string uri)
         {
-            var document = _cosmosService.GetMetadataRecordByUri(uri);
+            var query = new List<CosmosFieldQueryValue> { new CosmosFieldQueryValue { FieldName = "Uri", FieldValue = uri, IsRequired = true } };
+            var documents = await _cosmosService.QueryMetadataRecords(query);
+            var document = documents.FirstOrDefault();
             return document is null ? ("No justification provided.", false) : (document.JustificationText, document.AwaitingIndex);
         }
     }

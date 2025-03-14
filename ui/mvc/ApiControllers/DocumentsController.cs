@@ -243,8 +243,13 @@ namespace PhiDeidPortal.Ui.Controllers
             var user = User.Identity?.Name;
             if (user is null) return null;
             if (adminOnly && !_authorizationService.HasElevatedRights(User)) return null;
-            if (adminOnly) return _cosmosService.GetMetadataRecordByUri(uri);
-            return _cosmosService.GetMetadataRecordByUriAndAuthor(uri,user);
+
+            var query = new List<CosmosFieldQueryValue> { new CosmosFieldQueryValue { FieldName = "Uri", FieldValue = uri, IsRequired = true }};
+            if (adminOnly) return _cosmosService.QueryMetadataRecords(query).Result.FirstOrDefault();
+
+            query.Add(new CosmosFieldQueryValue { FieldName = "Author", FieldValue = user, IsRequired = true });
+            return _cosmosService.QueryMetadataRecords(query).Result.FirstOrDefault();
+
         }
 
     }
