@@ -28,13 +28,10 @@ public class OpenAI_StructuredOutputs
     public async Task<IActionResult> RedactSensitiveInfoWithOpenAI(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
     {
-        // log.LogInformation("OpenAiRedactionFunction processed a request.");
-        
         string redactionPrompt = Environment.GetEnvironmentVariable("PII_REDACTION_PROMPT") ?? "";
         log.LogInformation($"Using redaction prompt: {redactionPrompt}");
 
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        // log.LogInformation($"Received request body: {requestBody}");
         
         var definition = new { Values = new List<OpenAiRedactionInputRecord>()};
         var inputRecord = JsonConvert.DeserializeAnonymousType(requestBody, definition);
