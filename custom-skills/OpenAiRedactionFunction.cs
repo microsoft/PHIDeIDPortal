@@ -1,55 +1,77 @@
-﻿using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using OpenAI.Chat;
-
+using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using AISearch.CustomFunctions;
 using Microsoft.Extensions.Configuration;
 using Azure.Core;
 using Azure.Identity;
-
+using System.Diagnostics;
+using Azure;
 
 namespace ChatCompletion;
 
-public class OpenAI_StructuredOutputs()
+public class OpenAI_StructuredOutputs
 {
-    
+    private readonly ILogger<OpenAI_StructuredOutputs> log;
+
+    public OpenAI_StructuredOutputs(ILogger<OpenAI_StructuredOutputs> logger)
+    {
+        log = logger;
+    }
+
     [Function("OpenAiRedactionFunction")]
     public async Task<IActionResult> RedactSensitiveInfoWithOpenAI(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
     {
-        IConfiguration config = new ConfigurationBuilder()
-           .AddEnvironmentVariables()
-           .Build();
-        string redactionPrompt = config["PII_REDACTION_PROMPT"] ?? "";
-        TokenCredential credentials = new DefaultAzureCredential();
+        string redactionPrompt = Environment.GetEnvironmentVariable("PII_REDACTION_PROMPT") ?? "";
+        log.LogInformation($"Using redaction prompt: {redactionPrompt}");
 
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        OpenAiRedactionInputRecord inputRecord;
+        
+        var definition = new { Values = new List<OpenAiRedactionInputRecord>()};
+        var inputRecord = JsonConvert.DeserializeAnonymousType(requestBody, definition);
+        
+        if (inputRecord == null || inputRecord.Values == null)
+        {
+            log.LogError("Invalid request body received");
+            return new BadRequestObjectResult("Please pass a valid request body");
+        }
+
+        log.LogInformation($"Processing {inputRecord.Values.Count} records");
+        Kernel kernel = null;
 
         try
         {
-            inputRecord = JsonConvert.DeserializeObject<OpenAiRedactionInputRecord>(requestBody);
-        }
-        catch (Exception ex)
-        {
-            return new BadRequestObjectResult($"Invalid input format: {ex.Message}");
-        }
+            log.LogInformation($"Deployment Name: {Environment.GetEnvironmentVariable("OPENAI_DEPLOYMENT_NAME")}");
+            log.LogInformation($"End Point: {Environment.GetEnvironmentVariable("OPENAI_ENDPOINT")}");            
+            log.LogInformation($"API Key: {Environment.GetEnvironmentVariable("OPENAI_API_KEY")?.Substring(0, 5)}*****{Environment.GetEnvironmentVariable("OPENAI_API_KEY")?.Substring(Environment.GetEnvironmentVariable("OPENAI_API_KEY").Length - 5)}");
 
-        if (string.IsNullOrEmpty(inputRecord?.Data?.Text))
-        {
-            return new BadRequestObjectResult("The input 'Text' field is required.");
-        }
-
-        Kernel kernel = Kernel.CreateBuilder()
+            kernel = Kernel.CreateBuilder()
             .AddAzureOpenAIChatCompletion(
                 deploymentName: Environment.GetEnvironmentVariable("OPENAI_DEPLOYMENT_NAME"),
                 endpoint: Environment.GetEnvironmentVariable("OPENAI_ENDPOINT"),
-                credentials: credentials)
+                apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+            )
             .Build();
+        }
+        catch (Exception ex)
+        {
+            log.LogError($"Error creating kernel: {ex}");
+
+            if (ex.InnerException != null)
+            {
+                log.LogError($"Error creating kernel: {ex.InnerException}");
+            }
+
+            return new BadRequestResult();
+        }
+
+        log.LogInformation("Kernel created");
 
         ChatResponseFormat chatResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
             jsonSchemaFormatName: "piiDetectionResult",
@@ -82,38 +104,76 @@ public class OpenAI_StructuredOutputs()
 
         var executionSettings = new OpenAIPromptExecutionSettings
         {
+            #pragma warning disable SKEXP0010
             ResponseFormat = chatResponseFormat
+            #pragma warning restore SKEXP0010
         };
 
-        var result = await kernel.InvokePromptAsync(redactionPrompt + inputRecord.Data.Text, new(executionSettings));
-
-        var resultString = result.GetValue<String>();
-        var piiDetectionResult = JsonConvert.DeserializeObject<PiiDetectionResult>(resultString);
-
-        var outputRecord = new OpenAiRedactionOutputRecord
+        PiiDetectionResult piiDetectionResult = new();
+        try
         {
-            RecordId = inputRecord.RecordId,
-            Data = new OpenAiRedactionOutputRecord.OutputRecordData
+            var outputRecords = new
             {
-                Text = inputRecord.Data.Text,
-                RedactedText = piiDetectionResult.PiiFound
-                    ? ApplyRedaction(inputRecord.Data.Text, piiDetectionResult.PiiDetails, inputRecord.Data.MaskingCharacter)
-                    : inputRecord.Data.Text,
-                RedactedEntities = JsonConvert.SerializeObject(piiDetectionResult.PiiDetails)
-            },
-            Errors = new List<OpenAiRedactionOutputRecord.OutputRecordMessage>(),
-            Warnings = new List<OpenAiRedactionOutputRecord.OutputRecordMessage>()
-        };
+                Values = new List<OpenAiRedactionOutputRecord>()
+            };
 
-        return new OkObjectResult(piiDetectionResult);
+        foreach (var record in inputRecord.Values)
+        {
+            if (record == null || record.RecordId == null) 
+            {
+                log.LogWarning("Skipping null record or record with null RecordId");
+                continue;
+            }
+
+            log.LogInformation($"Processing record {record.RecordId}");
+            var result = await kernel.InvokePromptAsync(redactionPrompt + record.Data.Text, new(executionSettings));
+               
+            var resultString = result.GetValue<string>();
+            log.LogInformation($"OpenAI response for record {record.RecordId}: {resultString}");
+            
+            piiDetectionResult = JsonConvert.DeserializeObject<PiiDetectionResult>(resultString);
+            log.LogInformation($"Found {piiDetectionResult.PiiDetails?.Count ?? 0} PII entities in record {record.RecordId}");
+
+                var outputRecord = new OpenAiRedactionOutputRecord();
+                outputRecord.RecordId = record.RecordId;
+                log.LogInformation($"outputRecordID {outputRecord.RecordId}");
+                outputRecord.Data = new OpenAiRedactionOutputRecord.OutputRecordData();
+                outputRecord.Data.Text = record.Data.Text;
+                log.LogInformation($"datatext {outputRecord.Data.Text}");
+                log.LogInformation($"piiDetails {string.Join(", ", piiDetectionResult.PiiDetails.ConvertAll(o => $"Text: {o.Text} Content: {o.Context} Type: {o.Type}"))}");
+                outputRecord.Data.RedactedText = piiDetectionResult.PiiFound
+                        ? ApplyRedaction(record.Data.Text, piiDetectionResult.PiiDetails, record.Data.MaskingCharacter)
+                        : record.Data.Text;
+                log.LogInformation($"RedactedText {outputRecord.Data.RedactedText}");
+                outputRecord.Data.RedactedEntities = JsonConvert.SerializeObject(piiDetectionResult.PiiDetails);
+                log.LogInformation($"RedactedEntities {outputRecord.Data.RedactedEntities}");
+                outputRecord.Errors = new List<OpenAiRedactionOutputRecord.OutputRecordMessage>();
+                log.LogInformation($"Errors {outputRecord.Errors}");
+                outputRecord.Warnings = new List<OpenAiRedactionOutputRecord.OutputRecordMessage>();
+                log.LogInformation($"Warnings {outputRecord.Warnings}");
+
+                outputRecords.Values.Add( outputRecord );
+            }
+        return new OkObjectResult(outputRecords);
+        } catch (Exception ex)
+        {
+            log.LogInformation($"**** ERROR **** {Environment.NewLine}{ex}");
+        }
+        return new BadRequestResult();
     }
 
     private string ApplyRedaction(string text, List<PiiDetail> piiDetails, string maskingCharacter)
     {
+        if (text == null || piiDetails == null || maskingCharacter == null) 
+        {
+            throw new Exception("ApplyRedaction requires a valid body");
+        }
+
         string redactedText = text;
 
         foreach (var piiDetail in piiDetails)
         {
+            log.LogInformation(piiDetail.Text);
             string maskedValue = new string(maskingCharacter.FirstOrDefault(), piiDetail.Text.Length);
             redactedText = redactedText.Replace(piiDetail.Text, maskedValue);
         }
