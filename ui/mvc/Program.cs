@@ -1,26 +1,13 @@
 using Azure.Identity;
-using Azure.Storage;
-using Azure.Storage.Blobs;
-using Azure.Storage.Sas;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Identity.Client;
-using Microsoft.Identity.Client.Extensibility;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using Microsoft.FeatureManagement;
 using PhiDeidPortal.Ui.Services;
-using System.Net.Http;
 using System.Text.Json;
 using PhiDeidPortal.Ui.Hubs;
 
@@ -43,7 +30,6 @@ namespace PhiDeidPortal.Ui
 
             builder.Services.Configure<CookiePolicyOptions>(options =>
             {
-                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.Unspecified;
                 // Handling SameSite cookie according to https://docs.microsoft.com/en-us/aspnet/core/security/samesite?view=aspnetcore-3.1
@@ -71,17 +57,6 @@ namespace PhiDeidPortal.Ui
                     options.Filters.Add(new AuthorizeFilter(policy));
                 }).AddMicrosoftIdentityUI();
 
-            var configuration = builder.Configuration.GetSection("StorageAccount");
-            var storageAccountUri = configuration["Uri"];
-            var credential = new StorageSharedKeyCredential(configuration["Name"], configuration["ApiKey"]);
-            var blobServiceClient = new BlobServiceClient(new Uri(storageAccountUri), credential);
-
-
-            builder.Services.AddSingleton(x =>
-            {
-                return blobServiceClient;
-            });
-
             builder.Services.AddTransient<IFeatureService, FeatureService>();
             builder.Services.AddSingleton<IBlobService, BlobService>(x =>
             {
@@ -103,10 +78,7 @@ namespace PhiDeidPortal.Ui
 
             builder.Services.AddSingleton<IUserContextService, UserContextService>();
 
-
-            // Use a Singleton instance of the SocketsHttpHandler, which you can share across any HttpClient in your application
             SocketsHttpHandler socketsHttpHandler = new SocketsHttpHandler();
-            // Customize this value based on desired DNS refresh timer
             socketsHttpHandler.PooledConnectionLifetime = TimeSpan.FromMinutes(5);
 
             var connectionModeConfig = builder.Configuration.GetSection("CosmosDb")["ConnectionMode"];
@@ -119,8 +91,6 @@ namespace PhiDeidPortal.Ui
             CosmosClientOptions cosmosClientOptions = new CosmosClientOptions()
             {
                 ConnectionMode = connectionMode,
-                // Pass your customized SocketHttpHandler to be used by the CosmosClient
-                // Make sure `disposeHandler` is `false`
                 HttpClientFactory = () => new HttpClient(socketsHttpHandler, disposeHandler: false)
             };
 
@@ -128,7 +98,6 @@ namespace PhiDeidPortal.Ui
             var cosmosEndpoint = builder.Configuration.GetSection("CosmosDb")["Endpoint"];
             var cosmosUseEntraAuth = bool.Parse(builder.Configuration.GetSection("CosmosDb")["UseEntraAuth"] ?? "false");
             
-            // Use a Singleton instance of the CosmosClient
             var cosmosClient = cosmosUseEntraAuth ?     new CosmosClient(cosmosEndpoint, new DefaultAzureCredential(), cosmosClientOptions) :
                                                         new CosmosClient(cosmosConnectionString, cosmosClientOptions);
 
@@ -137,18 +106,15 @@ namespace PhiDeidPortal.Ui
                 return cosmosClient;
             });
 
-            //ICosmosService
             builder.Services.AddSingleton<ICosmosService, CosmosService>(x =>
             {
                 return new CosmosService(cosmosClient, builder.Configuration);
             });
 
-            // Add services to the container.
             builder.Services.AddRazorPages();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error");
