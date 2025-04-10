@@ -1,13 +1,14 @@
 ﻿@using PhiDeidPortal.Ui.ViewComponents
 @using PhiDeidPortal.Ui.Entities
+@using System.Configuration
 @model UploadViewModel
 
 @{
     if (Model.IsFeatureAvailable)
     {
        <form id="uploadForm" action="/api/Documents" method="post" enctype="multipart/form-data">
-            <div class="alert alert-info">Supports Microsoft Excel, JSON, Adobe PDF, Plain Text, Microsoft Word. 5MB file size max.</div>
-            <input type="file" id="fileInput" name="file" accept=".pdf, .csv, .json, .xls, .xlsx, .doc, .docx" required>
+            <div class="alert alert-info">Supports Microsoft Excel, JSON, Adobe PDF, Plain Text, Microsoft Word up to @Model.MaxFileSize MB.</div>
+            <input type="file" id="fileInput" name="file" accept=".pdf, .csv, .json, .xls, .xlsx, .doc, .docx, .txt" required>
             <div class="row">
                   <div class="col"><input type="text" class="form-control" id="uploadTagEntry" placeholder="(Optional) Enter a tag" /></div>
                   <div class="col"><button class="btn btn-secondary" id="addTag" type="button"><i class="bi bi-plus-lg"></i> Add</button></div>
