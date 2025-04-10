@@ -19,12 +19,21 @@ namespace PhiDeidPortal.Ui
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                var configuration = builder.Configuration.GetSection("Kestrel");
+                var maxRequestBodySize = configuration["MaxRequestBodySizeinMB"];
+                maxRequestBodySize ??= "100";
+                var size = int.Parse(maxRequestBodySize);
+                options.Limits.MaxRequestBodySize = size * 1024 * 1024;
+            });
+
             builder.Services.AddSignalR()
-                    .AddJsonProtocol(options =>
-                    {
-                        options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                        options.PayloadSerializerOptions.WriteIndented = true;
-                    });
+                .AddJsonProtocol(options =>
+                {
+                    options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                    options.PayloadSerializerOptions.WriteIndented = true;
+                });
 
             builder.Services.AddFeatureManagement();
 
