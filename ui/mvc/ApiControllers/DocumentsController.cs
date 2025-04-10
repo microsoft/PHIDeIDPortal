@@ -53,8 +53,6 @@ namespace PhiDeidPortal.Ui.Controllers
         {
             if (file == null || file.Length == 0) return BadRequest("No file uploaded");
 
-            var allowedExtensions = new[] { ".pdf", ".csv", ".json", ".xls", ".xlsx", ".doc", ".docx" };
-
             if (!AllowableContentType.IsAllowable(file.ContentType)) return BadRequest($"{file.ContentType} not supported.");
 
             string blobName = Regex.Replace(Path.GetFileName(file.FileName), @"[^a-zA-Z0-9_\-\.]", "");
