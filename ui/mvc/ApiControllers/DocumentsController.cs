@@ -53,6 +53,10 @@ namespace PhiDeidPortal.Ui.Controllers
         {
             if (file == null || file.Length == 0) return BadRequest("No file uploaded");
 
+            var allowedExtensions = new[] { ".pdf", ".csv", ".json", ".xls", ".xlsx", ".doc", ".docx" };
+
+            if (!AllowableContentType.IsAllowable(file.ContentType)) return BadRequest($"{file.ContentType} not supported.");
+
             string blobName = Regex.Replace(Path.GetFileName(file.FileName), @"[^a-zA-Z0-9_\-\.]", "");
 
             string tags = this.HttpContext.Request.Form["uploadTags"];
@@ -72,7 +76,7 @@ namespace PhiDeidPortal.Ui.Controllers
             }
             catch
             {
-                return StatusCode(500, "Error uploading document to the Storage Account.");
+                return StatusCode(500, "Cannot connect to the storage account.");
             }
 
             try
@@ -94,7 +98,7 @@ namespace PhiDeidPortal.Ui.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest($"Error uploading document metadata to Cosmos DB.");
+                return BadRequest($"Cannot upload document metadata to the database.");
             }
 
             var reupload = _searchConfiguration["ReindexOnUpload"] ?? "false";
