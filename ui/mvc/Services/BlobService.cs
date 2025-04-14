@@ -1,12 +1,8 @@
-﻿using Azure;
-using Azure.Identity;
+﻿using Azure.Identity;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
-using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using static System.Reflection.Metadata.BlobBuilder;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PhiDeidPortal.Ui.Services
 {
@@ -23,10 +19,20 @@ namespace PhiDeidPortal.Ui.Services
         {
             var blobServiceConfiguration = configuration.GetSection("StorageAccount");
             var storageAccountUri = blobServiceConfiguration["Uri"];
-            var storageAccountApiKey = blobServiceConfiguration["ApiKey"];
+            var managedIdentity = blobServiceConfiguration["UseManagedIdentity"];
 
-            var credential = new StorageSharedKeyCredential(blobServiceConfiguration["Name"], blobServiceConfiguration["ApiKey"]);
+            if (storageAccountUri == null)
+            {
+                throw new ArgumentNullException(nameof(storageAccountUri), "Storage account configuration is missing.");
+            }
 
+            if (managedIdentity is not null && managedIdentity.Equals("true", StringComparison.CurrentCultureIgnoreCase))
+            {
+                _blobServiceClient = new BlobServiceClient(new Uri(storageAccountUri), new DefaultAzureCredential());
+                return;
+            }
+
+            var credential = new StorageSharedKeyCredential(blobServiceConfiguration["AccountName"], blobServiceConfiguration["AccountKey"]);
             _blobServiceClient = new BlobServiceClient(new Uri(storageAccountUri), credential);
         }
 

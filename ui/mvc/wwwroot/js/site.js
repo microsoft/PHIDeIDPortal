@@ -73,23 +73,10 @@ phideid.ui = (function () {
         },
 
         submitUpload(formElem) {
-
-            $(".upload-error").hide();
-            $(".upload-error-2").hide();
-
             var fileInput = $(formElem).children("input:file");
             if (!fileInput || !fileInput[0] || !fileInput[0].files || !fileInput[0].files[0]) return;
             phideid.ui.showLoadingIndicator();
             var file = fileInput[0].files[0];
-            var allowedExtensions = [".pdf", ".csv", ".json", ".xls", ".xlsx", ".doc", ".docx"];
-            var fileExtension = file.name.split(".").pop().toLowerCase();
-
-            $(".upload-error").hide();
-            if (!allowedExtensions.includes("." + fileExtension)) {
-                $(".upload-error").show();
-                phideid.ui.hideLoadingIndicator();
-                return;
-            }
 
             var tagCloud = $(formElem).children("#uploadTagCloud");
             var tagInput = $(formElem).children("#uploadTags");
@@ -119,11 +106,10 @@ phideid.ui = (function () {
                 success: function (data) {
                     $(".loading").hide();
                     $("#uploadDialog").modal('hide');
-                    phideid.ui.showToast("Document uploaded.", false, false);
+                    phideid.ui.showToast("Document uploaded.", false, true);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    $(".upload-error-2").html(`There was an error uploading the document: ${XMLHttpRequest.responseText}`, true, false);
-                    $(".upload-error-2").show();
+                    phideid.ui.showToast(`Error uploading: ${XMLHttpRequest.responseText}`, true, false);
                     phideid.ui.hideLoadingIndicator();
                 }
 
@@ -229,13 +215,12 @@ phideid.ui = (function () {
                 success: function (data) {
                     phideid.ui.hideLoadingIndicator();
                     phideid.ui.showToast("Document updated.",false,false);
-                    // phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                     $(`div[data-id='${id}']`).closest("tr").remove();
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     phideid.ui.hideLoadingIndicator();
                     var reload = (XMLHttpRequest.status === 409);
-                    phideid.ui.showToast(`There was an error updating the document: ${XMLHttpRequest.responseText}`,true,reload);
+                    phideid.ui.showToast(`Error updating the document: ${XMLHttpRequest.responseText}`,true,reload);
                     phideid.ui.disableButtonGroup($(`div[data-id='${id}']`));
                 }
 
@@ -349,7 +334,6 @@ $(document).ready(function () {
 
     $('#submitUpload').bind('click', function () {
         phideid.ui.submitUpload($("#uploadForm"));
-        location.reload();
     });
 
     $(".upload-button").bind('click', function () {
