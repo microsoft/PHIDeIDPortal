@@ -12,9 +12,11 @@
       "dynamicId": null
     },
     "compute.function.windows1": {
+      "secretStore": null,
       "group": "connections",
-      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Web/sites/phidetectfunc",
-      "type": "compute.function.windows.appService"
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Web/sites/usomphideidfn",
+      "type": "compute.function.windows.appService",
+      "connectionId": null
     }
   }
 }

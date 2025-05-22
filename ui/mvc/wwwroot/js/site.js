@@ -263,12 +263,12 @@ phideid.ui = (function () {
             });
         },
 
-        async deleteDocument(id, uri, indexOnly) {
+        async deleteDocument(id, uri) {
             var formData = {};
-            formData.key = id;
+            formData.key = id ? id : "";
             formData.uri = uri;
 
-            var endpoint = indexOnly ? '/api/documents/deletefromsearchindex' : '/api/documents/delete';
+            var endpoint = '/api/documents/delete';
 
             phideid.ui.showLoadingIndicator();
 

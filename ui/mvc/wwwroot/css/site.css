@@ -78,6 +78,10 @@ body {
     font-weight:600;
 }
 
+.delete-button-inline {
+    padding: 4px 24px !important;
+}
+
 .date-column {
     min-width: 180px;
 }
@@ -93,6 +97,10 @@ body {
     max-width: 220px;
     width: 100%;
 
+}
+
+.inline-button-group-elem {
+    margin: 2px 4px;
 }
 
 .tagCloudElem {

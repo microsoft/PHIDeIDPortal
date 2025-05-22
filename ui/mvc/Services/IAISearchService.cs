@@ -10,5 +10,6 @@ namespace PhiDeidPortal.Ui.Services
         Task<ServiceResponse> ResetDocumentAsync(string key);
         Task<ServiceResponse> RunIndexerAsync(string name);
         Task<ServiceResponse> DeleteDocumentAsync(string key);
+        Task<List<string>> GetFailedIndexedFiledAsync(string name);
     }
 }

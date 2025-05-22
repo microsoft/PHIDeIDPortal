@@ -4,6 +4,8 @@ using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
 using static System.Net.WebRequestMethods;
 using System.Net;
+using Azure.Search.Documents.Indexes.Models;
+using Microsoft.Azure.Cosmos.Linq;
 
 namespace PhiDeidPortal.Ui.Services
 {
@@ -75,6 +77,35 @@ namespace PhiDeidPortal.Ui.Services
             var response = await _indexerClient.RunIndexerAsync(name);
             return new ServiceResponse() { IsSuccess = !response.IsError, Code = (HttpStatusCode)response.Status };
         }
+
+        public async Task<List<string>> GetFailedIndexedFiledAsync(string name)
+        {
+            var failures = new List<string>();
+
+            if (String.IsNullOrEmpty(name)) { name = _defaultIndexerName; }
+
+            var response = await _indexerClient.GetIndexerStatusAsync(name);
+
+            var failedHistory = response.Value.ExecutionHistory.Where(x => x.Status != IndexerExecutionStatus.Success);
+
+            foreach (var f in failedHistory)
+            {
+                failures.AddRange([.. f.Errors.Select(x => GetDocumentKeyValue(x.Key))]);
+                failures.AddRange([.. f.Warnings.Select(x => GetDocumentKeyValue(x.Key))]);
+            }
+
+            return failures;
+        }
+
+        private static string? GetDocumentKeyValue(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return null;
+
+            return input.Split('&', StringSplitOptions.RemoveEmptyEntries)
+            .Select(pair => pair.Split('=', 2))
+            .FirstOrDefault(kv => kv.Length == 2 && kv[0].Equals("documentkey", StringComparison.OrdinalIgnoreCase))?[1];
+        }
+
     }
 
 }

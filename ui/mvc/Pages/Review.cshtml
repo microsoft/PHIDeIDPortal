@@ -22,8 +22,11 @@
                     if (Model.Results is null) return;
                     @foreach (SearchResult<SearchDocument> result in Model.Results)
                     {
-                        var (text, awaitingIndexing) = await @Model.GetMetadataRecord(result.Document["metadata_storage_path"].ToString());
-                        if (awaitingIndexing) continue;
+                        var storagePath = result.Document["metadata_storage_path"].ToString();
+                        if (storagePath is null) continue;
+                        var status = result.Document["status"].ToString();
+                        var (text, awaitingIndexing) = await @Model.GetMetadataRecord(storagePath);
+                        if (status == "2" && !awaitingIndexing) continue;
                         
                         var piiHover = (((String)result.Document["piiEntities"]) == "[]") ?
 

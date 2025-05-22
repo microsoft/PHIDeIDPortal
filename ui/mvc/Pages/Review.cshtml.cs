@@ -30,13 +30,13 @@ namespace PhiDeidPortal.Ui.Pages
             var searchFilter = $"status eq 3 or status eq 2";
 
             Results = (isElevated && !viewFilter) ? _searchService.SearchAsync(searchFilter, searchString).Result : _searchService.SearchByAuthorAsync(User.Identity.Name, searchFilter, searchString).Result;
-            foreach(var result in Results)
+           /* foreach(var result in Results)
             {
                 if (result.Document["status"].ToString() == "3")
                 {
                     var mdr = GetMetadataRecord(result.Document["metadata_storage_path"].ToString());
                 }
-            }
+            }*/
             
             UserHasElevatedRights = isElevated;
             IsDownloadFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Download);

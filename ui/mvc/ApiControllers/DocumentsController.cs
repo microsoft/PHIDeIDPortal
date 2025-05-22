@@ -47,6 +47,16 @@ namespace PhiDeidPortal.Ui.Controllers
                 "application/octet-stream");
         }
 
+        [HttpGet]
+        [Route("api/documents/failures")]
+        [FeatureGate(Feature.FailureView)]
+        public async Task<IActionResult> GetFailures()
+        {
+            var results = await _searchService.GetFailedIndexedFiledAsync(String.Empty);
+            return Ok(results);
+        }
+
+
         [Route("api/documents/upload")]
         [FeatureGate(Feature.Upload)]
         public async Task<IActionResult> Post(IFormFile file)
@@ -124,13 +134,18 @@ namespace PhiDeidPortal.Ui.Controllers
         public async Task<IActionResult> Delete(DeleteDocumentRequestEntity document)
         {
             var cosmosDocument = GetMetadataRecordByUri(document.Uri);
-            if (cosmosDocument is null) return BadRequest("Document not found for the given author.");
+            
+            if (String.IsNullOrWhiteSpace(document.Uri)) return BadRequest("Document could not be deleted. Invalid document URI.");
             var deleteBlob = await _blobService.DeleteDocumentAsync(_containerName, document.Uri);
-            if (!deleteBlob.IsSuccess) return BadRequest("Delete document failed - Storage (1).");
+            if (!deleteBlob.IsSuccess) return BadRequest("Document could not be deleted. Storage account failure.");
+
+            if (cosmosDocument is null) return BadRequest("Document deleted with errors. Document metadata not found for the given author.");
             var deleteCosmos = await _cosmosService.DeleteMetadataRecordAsync(cosmosDocument);
-            if (!deleteCosmos.IsSuccess) return BadRequest("Delete document failed - Cosmos (2).");
+            if (!deleteCosmos.IsSuccess) return BadRequest("Document deleted with errors. Metadata database failure.");
+            
+            if (String.IsNullOrWhiteSpace(document.Key)) return BadRequest("Document deleted with errors. Invalid index key.");
             var deleteIndex = await _searchService.DeleteDocumentAsync(document.Key);
-            if (!deleteIndex.IsSuccess) return BadRequest("Delete document failed - Index (3).");
+            if (!deleteIndex.IsSuccess) return BadRequest("Document deleted with errors. Index deletion failure.");
 
             return Ok();
         }

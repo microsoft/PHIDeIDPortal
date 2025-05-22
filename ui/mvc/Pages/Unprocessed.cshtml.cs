@@ -9,10 +9,13 @@ namespace PhiDeidPortal.Ui.Pages
 {
     [Authorize]
     [FeatureGate(Feature.UnprocessedView)]
-    public class UnprocessedModel(IAuthorizationService authorizationService, ICosmosService cosmosService) : PageModel
+    public class UnprocessedModel(IAuthorizationService authorizationService, ICosmosService cosmosService, IFeatureService featureService) : PageModel
     {
         private readonly ICosmosService _cosmosService = cosmosService;
         private readonly IAuthorizationService _authService = authorizationService;
+        private readonly IFeatureService _featureService = featureService;
+        public bool IsDeleteFeatureAvailable { get; private set; }
+
         public List<MetadataRecord> Results { get; private set; } = [];
 
         public void OnGet()
@@ -21,6 +24,7 @@ namespace PhiDeidPortal.Ui.Pages
             var viewFilter = Request.Query["v"].ToString().ToLower() == "me";
             var isElevated = _authService.HasElevatedRights(User);
             Results = (isElevated && !viewFilter) ? _cosmosService.GetMetadataRecordsByStatus(1) : _cosmosService.GetMetadataRecordsByStatusAndAuthor(1,User.Identity.Name);
+            IsDeleteFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Delete);
         }
     }
 }

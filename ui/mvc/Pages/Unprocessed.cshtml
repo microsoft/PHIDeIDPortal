@@ -12,6 +12,7 @@
             <th nowrap>Document</th>
             <th>Author</th>
             <th>Last Indexed</th>
+            <th>Actions</th>
             <th nowrap>Metadata</th>
         </tr>
     </thead>
@@ -28,6 +29,18 @@
                         if (lastIndexed == DateTime.MinValue) { <span><i>unindexed</i></span> }
                         else { <span><script type="text/javascript">document.write(moment(moment.utc('@lastIndexed.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)').toDate()).local().format('YYYY-MM-DD hh:mm A'));</script></span> }
                     }
+                </td>
+                <td style="vertical-align: top;" class="redacted-content-td">
+                    <div class="inline-button-group-elem">
+                        <div>
+                            @{
+                                if (Model.IsDeleteFeatureAvailable)
+                                {
+                                    <button class="btn btn-danger delete-button delete-button-inline" type="button" data-href='@result.Uri'><i class="bi bi-x-lg"></i> Delete</button>
+                                }
+                            }
+                        </div>
+                    </div>
                 </td>
                 <td style="vertical-align: top;">
                     @foreach (var tag in result.OrganizationalMetadata)

@@ -15,5 +15,6 @@
         public const string ManualReviewView = "ManualReviewView";
         public const string ApprovedView = "ApprovedView";
         public const string DeniedView = "DeniedView";
+        public const string FailureView = "FailureView";
     }
 }
