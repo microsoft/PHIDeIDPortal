@@ -1,0 +1,183 @@
+{
+  "@odata.context": "https://{searchinstance}/$metadata#skillsets/$entity",
+  "@odata.etag": "\"0x8DC5E8612E2CC44\"",
+  "name": "skillset1708719109447",
+  "description": "",
+  "skills": [
+    {
+      "@odata.type": "#Microsoft.Skills.Vision.OcrSkill",
+      "name": "OcrSkill",
+      "description": "Extract text (plain and structured) from image.",
+      "context": "/document/normalized_images/*",
+      "textExtractionAlgorithm": null,
+      "lineEnding": "Space",
+      "defaultLanguageCode": "en",
+      "detectOrientation": true,
+      "inputs": [
+        {
+          "name": "image",
+          "source": "/document/normalized_images/*"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "targetName": "ocrSkillOutput"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Text.MergeSkill",
+      "name": "MergeSkill",
+      "description": "Create merged_text, which includes all the textual representation of each image inserted at the right location in the content field.",
+      "context": "/document",
+      "insertPreTag": " ",
+      "insertPostTag": " ",
+      "inputs": [
+        {
+          "name": "text",
+          "source": "/document/content"
+        },
+        {
+          "name": "itemsToInsert",
+          "source": "/document/normalized_images/*/ocrSkillOutput"
+        },
+        {
+          "name": "offsets",
+          "source": "/document/normalized_images/*/contentOffset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mergedText",
+          "targetName": "mergeSkillOutput"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
+      "name": "OpenAiRedactionFunction",
+      "description": "Custom skill for OpenAI-powered content redaction",
+      "context": "/document",
+      "uri": "{uri}",
+      "httpMethod": "POST",
+      "timeout": "PT1M",
+      "batchSize": 1000,
+      "inputs": [
+        {
+          "name": "text",
+          "source": "/document/mergeSkillOutput"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "redactedText",
+          "targetName": "wordSkillRedactedContentOutput"
+        },
+        {
+          "name": "redactedEntities",
+          "targetName": "customSkillRedactedEntities"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Util.ConditionalSkill",
+      "name": "ContainsPIICondition",
+      "description": "Checks for the existance of PII",
+      "context": "/document",
+      "inputs": [
+        {
+          "name": "condition",
+          "source": "=$(/document/content) == $(/document/wordSkillRedactedContentOutput)"
+        },
+        {
+          "name": "whenTrue",
+          "source": "='4'"
+        },
+        {
+          "name": "whenFalse",
+          "source": "='2'"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "targetName": "containsPIIConditionOutput"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
+      "name": "MetadataSyncFunction",
+      "description": "Custom skill to sync metadata with Cosmos record",
+      "context": "/document",
+      "uri": "{uri}",
+      "httpMethod": "POST",
+      "timeout": "PT30S",
+      "batchSize": 1000,
+      "degreeOfParallelism": null,
+      "inputs": [
+        {
+          "name": "uri",
+          "source": "/document/metadata_storage_path"
+        },
+        {
+          "name": "status",
+          "source": "/document/containsPIIConditionOutput"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "author",
+          "targetName": "cosmosSkillAuthorOutput"
+        },
+        {
+          "name": "status",
+          "targetName": "cosmosSkillStatusOutput"
+        },
+        {
+          "name": "organizationalMetadata",
+          "targetName": "cosmosSkillOrganizationalMetadataOutput"
+        },
+        {
+          "name": "executionTime",
+          "targetName": "cosmosSkillExecutionTimeOutput"
+        }
+      ],
+      "httpHeaders": {}
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
+      "name": "OpenAIPIIRedactionSkill",
+      "description": "PII redaction using OpenAI's detection capabilities",
+      "context": "/document/merged_content",
+      "uri": "YOUR_FUNCTION_ENDPOINT_HERE",
+      "httpMethod": "POST",
+      "timeout": "PT30S",
+      "batchSize": 1,
+      "degreeOfParallelism": null,
+      "inputs": [
+        {
+          "name": "text",
+          "source": "/document/merged_content"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "piiEntities",
+          "targetName": "piiEntities"
+        }
+      ],
+      "httpHeaders": {
+        "api-key": "YOUR_FUNCTION_KEY_HERE"
+      }
+    }
+  ],
+  "cognitiveServices": {
+    "@odata.type": "#Microsoft.Azure.Search.DefaultCognitiveServices",
+    "description": null
+  },
+  "knowledgeStore": null,
+  "indexProjections": null,
+  "encryptionKey": null
+}

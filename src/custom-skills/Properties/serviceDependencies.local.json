@@ -1,0 +1,22 @@
+{
+  "dependencies": {
+    "secrets1": {
+      "type": "secrets.user"
+    },
+    "cosmosdb1": {
+      "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.ServiceLinker/locations/eastus/connectors/dbConnection_1046899E4D",
+      "secretStore": "LocalSecretsFile",
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.DocumentDB/databaseAccounts/phidetectcosmosdb",
+      "type": "cosmosdb.azure",
+      "connectionId": "dbConnection",
+      "dynamicId": null
+    },
+    "compute.function.windows1": {
+      "secretStore": null,
+      "group": "connections",
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Web/sites/usomphideidfn",
+      "type": "compute.function.windows.appService",
+      "connectionId": null
+    }
+  }
+}
