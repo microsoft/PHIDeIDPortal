@@ -1,0 +1,121 @@
+﻿@page
+@using System.Globalization
+@model IndexModel
+@{
+    ViewData["Title"] = "All Documents";
+    int i = 0;
+}
+
+<table id="tblDocs index" class="table">
+    <thead>
+        <tr>
+            <th nowrap>Document</th>
+            <th>Author</th>
+            <th>Status</th>
+            <th nowrap>Metadata</th>
+            <th class="center">AI Reviewed</th>
+            <th>AI Reviewed Date</th>
+            <th class="center">AI Review Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var result in Model.Results)
+        {
+            <tr class="@(i % 2 == 0 ? "row-even" : "row-odd")">
+                <td>@result.FileName</td>
+                <td>@result.Author.ToString().Split('@')[0]</td>
+                <td>
+                    @{
+                        var enumParsed = DeidStatus.TryParse(result.Status.ToString(), out DeidStatus deidStatus);
+                        if (enumParsed)
+                        {
+                            @deidStatus
+                        }
+                    }
+                </td>
+                <td>
+                    @{
+                        foreach (var tag in result.OrganizationalMetadata)
+                        {
+                            if (String.IsNullOrWhiteSpace(tag.ToString()))
+                            {
+                                <div class='tagCloudElemPlaceholder'>&nbsp;<span></span></div>
+                            }
+                            else
+                            {
+                                <div class='tagCloudElem'><span>@tag</span></div>
+                            }
+                        }
+                    }
+                </td>
+                <td class="center">
+                    @{
+                        if (result.AwaitingIndex)
+                        {
+                            <i class="bi bi-arrow-repeat icon-column-icon" title="Document is being reviewed"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check icon-column-icon" title="Document has been AI reviewed"></i>
+                        }
+                    }
+                </td>
+                <td class="date-column">
+                    @{
+                        var lastIndexedString = result.LastIndexed;
+                        DateTime.TryParse(lastIndexedString.ToString(), out DateTime lastIndexed);
+                        if (lastIndexed == DateTime.MinValue)
+                        {
+                            <span><i>unindexed</i></span>
+                        }
+                        else
+                        {
+                            <span><script type="text/javascript">document.write(moment(moment.utc('@lastIndexed.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)').toDate()).local().format('YYYY-MM-DD hh:mm A'));</script></span>
+                        }
+                    }
+                </td>
+
+
+                @{
+                    var hasFailed = Model.FailedRecords.Contains(result.Uri);
+                }
+
+
+                <td class="center">
+                    @{
+                        if (hasFailed && result.AwaitingIndex)
+                        {
+                            if (Model.IsDeleteFeatureAvailable)
+                            {
+                                <div class="input-group">
+                                    @{
+                                        <button class="btn btn-secondary alert-button-inline" type="button"><i class='bi bi-exclamation-triangle' title="Error reviewing the document"></i></button>
+
+                                        if (Model.IsDeleteFeatureAvailable)
+                                        {
+                                            <button class="btn btn-danger delete-button delete-button-inline" type="button" data-href='@result.Uri'><i class="bi bi-x-lg"></i> Delete</button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-danger" type="button"></button>
+                                        }
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <i class="bi bi-exclamation-triangle exclaim icon-column-icon" title="Error reviewing the document"></i>
+                            }
+                        }
+                        else
+                        {
+                            <i class="bi bi-check icon-column-icon" title="Document has been AI reviewed"></i>
+                        }
+                    }
+                </td>
+            </tr>
+
+            i++;
+        }
+    </tbody>
+</table>
