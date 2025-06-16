@@ -27,7 +27,7 @@
 
                 string piiHoverMessage;
                 string piiItemsList = string.Empty;
-                if (!result.Document.ContainsKey("piiEntities"))
+                if (!result.Document.ContainsKey("piiEntities")) // ToDo: Add log entries for each of the conditions
                 {
                     piiHoverMessage = "<div class='piiHover containsError bg-danger'><strong>Error.</strong> result.Document does not contain piiEntities.</div>";
                 }
@@ -45,7 +45,6 @@
                     
                     for (int piiEntityCount = 0; piiEntityCount < (result.Document["piiEntities"] as Array).Length; piiEntityCount++)
                     {
-                        // piiItemsList += (result.Document["piiEntities"] as Array).GetValue(piiEntCount)?.ToString() + (piiEntCount < (result.Document["piiEntities"] as Array).Length - 1 ? ",\n" : "");
                         piiItemsList += $"{(result.Document["piiEntities"] as Array).GetValue(piiEntityCount)?.ToString()}{(piiEntityCount < (result.Document["piiEntities"] as Array).Length - 1 ? ",\n" : "")}";
                     }
                 }
