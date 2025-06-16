@@ -1,9 +1,8 @@
 {
-  "@odata.etag": "\"0x8DC5FE9FB6A91C3\"",
-  "name": "piiredaction-unstructured",
+  "name": "piiredaction-indexer",
   "description": "PII Redaction Indexer",
-  "dataSourceName": "pii-sample-unstructured",
-  "skillsetName": "skillset1708719109447",
+  "dataSourceName": "piiredaction-datasource",
+  "skillsetName": "piiredaction-skillset",
   "targetIndexName": "piiredaction",
   "disabled": null,
   "schedule": {
@@ -14,7 +13,6 @@
     "batchSize": null,
     "maxFailedItems": null,
     "maxFailedItemsPerBatch": null,
-    "base64EncodeKeys": null,
     "configuration": {
       "allowSkillsetToReadFileData": false,
       "dataToExtract": "contentAndMetadata",
@@ -25,11 +23,11 @@
   "fieldMappings": [],
   "outputFieldMappings": [
     {
-      "sourceFieldName": "/document/detectionSkillEntitiesOutput",
+      "sourceFieldName": "/document/redactedEntitiesOutput",
       "targetFieldName": "piiEntities"
     },
     {
-      "sourceFieldName": "/document/wordSkillRedactedContentOutput",
+      "sourceFieldName": "/document/redactedTextOutput",
       "targetFieldName": "redactedContent"
     },
     {
@@ -43,10 +41,6 @@
     {
       "sourceFieldName": "/document/cosmosSkillOrganizationalMetadataOutput",
       "targetFieldName": "organizationalMetadata"
-    },
-    {
-      "sourceFieldName": "/document/customSkillRedactedEntities",
-      "targetFieldName": "customSkillRedactedEntities"
     },
     {
       "sourceFieldName": "/document/cosmosSkillExecutionTimeOutput",

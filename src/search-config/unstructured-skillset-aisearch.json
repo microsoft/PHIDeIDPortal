@@ -1,7 +1,5 @@
 {
-  "@odata.context": "https://{searchinstance}/$metadata#skillsets/$entity",
-  "@odata.etag": "\"0x8DC5E8612E2CC44\"",
-  "name": "skillset1708719109447",
+  "name": "piiredaction-skillset",
   "description": "",
   "skills": [
     {
@@ -59,7 +57,7 @@
       "name": "OpenAiRedactionFunction",
       "description": "Custom skill for OpenAI-powered content redaction",
       "context": "/document",
-      "uri": "{uri}",
+      "uri": "{PLACEHOLDER}",
       "httpMethod": "POST",
       "timeout": "PT1M",
       "batchSize": 1000,
@@ -72,11 +70,11 @@
       "outputs": [
         {
           "name": "redactedText",
-          "targetName": "wordSkillRedactedContentOutput"
+          "targetName": "redactedTextOutput"
         },
         {
           "name": "redactedEntities",
-          "targetName": "customSkillRedactedEntities"
+          "targetName": "redactedEntitiesOutput"
         }
       ]
     },
@@ -88,7 +86,7 @@
       "inputs": [
         {
           "name": "condition",
-          "source": "=$(/document/content) == $(/document/wordSkillRedactedContentOutput)"
+          "source": "=$(/document/content) == $(/document/redactedTextOutput)"
         },
         {
           "name": "whenTrue",
@@ -111,7 +109,7 @@
       "name": "MetadataSyncFunction",
       "description": "Custom skill to sync metadata with Cosmos record",
       "context": "/document",
-      "uri": "{uri}",
+      "uri": "{PLACEHOLDER}",
       "httpMethod": "POST",
       "timeout": "PT30S",
       "batchSize": 1000,
@@ -145,32 +143,6 @@
         }
       ],
       "httpHeaders": {}
-    },
-    {
-      "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
-      "name": "OpenAIPIIRedactionSkill",
-      "description": "PII redaction using OpenAI's detection capabilities",
-      "context": "/document/merged_content",
-      "uri": "YOUR_FUNCTION_ENDPOINT_HERE",
-      "httpMethod": "POST",
-      "timeout": "PT30S",
-      "batchSize": 1,
-      "degreeOfParallelism": null,
-      "inputs": [
-        {
-          "name": "text",
-          "source": "/document/merged_content"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "piiEntities",
-          "targetName": "piiEntities"
-        }
-      ],
-      "httpHeaders": {
-        "api-key": "YOUR_FUNCTION_KEY_HERE"
-      }
     }
   ],
   "cognitiveServices": {
