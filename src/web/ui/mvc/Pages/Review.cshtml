@@ -27,11 +27,31 @@
                         var status = result.Document["status"].ToString();
                         var (text, awaitingIndexing) = await @Model.GetMetadataRecord(storagePath);
                         if (status == "2" && !awaitingIndexing) continue;
-                        
-                        var piiHover = (((String)result.Document["piiEntities"]) == "[]") ?
 
-                        "<div class='piiHover containsNoPii bg-success'>This document does not contain PII/PHI identified content.</div>" :
-                        "<div class='piiHover containsPii bg-danger'>This document contains PII/PHI identified content. Click to view more...</div>";
+                        string piiHoverMessage;
+                        string piiItemsList = string.Empty;
+                        if (!result.Document.ContainsKey("piiEntities"))
+                        {
+                            piiHoverMessage = "<div class='piiHover containsError bg-danger'><strong>Error.</strong> result.Document does not contain piiEntities.</div>";
+                        }
+                        else if (!result.Document["piiEntities"].GetType().IsArray)
+                        {
+                            piiHoverMessage = "<div class='piiHover containsError bg-danger'><strong>Error.</strong> piiEntities is not an array. Type: " + result.Document["piiEntities"].GetType().ToString() + "</div>";
+                        }
+                        else if ((result.Document["piiEntities"] as Array)?.Length == 0)
+                        {
+                            piiHoverMessage = "<div class='piiHover containsNoPii bg-success'>This document <strong>does not contain PII/PHI</strong> identified content.</div>";
+                        }
+                        else
+                        {
+                            piiHoverMessage = "<div class='piiHover containsPii bg-warning'>This document <strong>contains PII/PHI</strong> identified content. Click to view more...</div>";
+                                        
+                            for (int piiEntityCount = 0; piiEntityCount < (result.Document["piiEntities"] as Array).Length; piiEntityCount++)
+                            {
+                                // piiItemsList += (result.Document["piiEntities"] as Array).GetValue(piiEntityCount)?.ToString() + (piiEntityCount < (result.Document["piiEntities"] as Array).Length - 1 ? ",\n" : "");
+                                piiItemsList += $"{(result.Document["piiEntities"] as Array).GetValue(piiEntityCount)?.ToString()}{(piiEntityCount < (result.Document["piiEntities"] as Array).Length - 1 ? ",\n" : "")}";
+                            }
+                        }
 
                         var redactedSummary = ((string)result.Document["redactedContent"]) is var rc && rc.Length > 512 ? $"{rc[..511]}..." : rc;
 
@@ -48,7 +68,7 @@
                             </td>
                             <!-- <td style="vertical-align: top;">@result.Document["content"]</td> -->
                             <td class="redacted-content-td tagged">
-                                <div class="content">@redactedSummary @Html.Raw(piiHover)<div class="piiDetails">@result.Document["piiEntities"]</div></div>
+                                <div class="content">@redactedSummary @Html.Raw(piiHoverMessage)<div class="piiDetails">@piiItemsList</div></div>
                                 <div style="padding: 0 !important; margin-top: 8px;" class="row">
                                     <div>
                                         @{
