@@ -1,5 +1,6 @@
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.SemanticKernel.Text;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using OpenAI.Chat;
@@ -7,11 +8,16 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using AISearch.CustomFunctions;
+using Microsoft.ML.Tokenizers;
+using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Azure.Core;
 using Azure.Identity;
 using System.Diagnostics;
 using Azure;
+using System.Text.Encodings.Web;
+using Microsoft.Extensions.Configuration.EnvironmentVariables;
+using custom_skills.Models;
 
 namespace ChatCompletion;
 
@@ -76,8 +82,7 @@ public class OpenAI_StructuredOutputs
          */
 
 
-        string redactionPrompt = Environment.GetEnvironmentVariable("PII_REDACTION_PROMPT") ?? "";
-        log.LogInformation($"Using redaction prompt: {redactionPrompt}");
+        string systemPrompt = Environment.GetEnvironmentVariable("PII_REDACTION_PROMPT") ?? "";
 
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
         
@@ -149,13 +154,6 @@ public class OpenAI_StructuredOutputs
                 """),
             jsonSchemaIsStrict: true);
 
-        var executionSettings = new OpenAIPromptExecutionSettings
-        {
-            #pragma warning disable SKEXP0010
-            ResponseFormat = chatResponseFormat
-            #pragma warning restore SKEXP0010
-        };
-
         PiiDetectionResult piiDetectionResult = new();
         try
         {
@@ -164,25 +162,63 @@ public class OpenAI_StructuredOutputs
                 Values = new List<OpenAiRedactionOutputRecord>()
             };
 
-        foreach (var record in inputRecord.Values)
-        {
-            if (record == null || record.RecordId == null) 
+            var redact = kernel.CreateFunctionFromPrompt(
+                promptTemplate: "{{$text}}",
+                executionSettings: new OpenAIPromptExecutionSettings
+                {
+                    ResponseFormat = chatResponseFormat,
+                    Temperature = 0.0,
+                    ChatSystemPrompt = systemPrompt
+                }
+            );
+
+            foreach (var record in inputRecord.Values)
             {
-                log.LogWarning("Skipping null record or record with null RecordId");
-                continue;
-            }
+                if (record == null || record.RecordId == null)
+                {
+                    log.LogWarning("Skipping null record or record with null RecordId");
+                    continue;
+                }
 
-            log.LogInformation($"Processing record {record.RecordId}");
-            var result = await kernel.InvokePromptAsync(redactionPrompt + record.Data.Text, new(executionSettings));
-               
-            var resultString = result.GetValue<string>();
-            
+                log.LogInformation($"Processing record {record.RecordId}");
 
-                piiDetectionResult = JsonConvert.DeserializeObject<PiiDetectionResult>(resultString);
-            
+                var prompt = systemPrompt + record.Data.Text;
+
+                log.LogInformation($"Input token count (with system prompt): {CountTokens(prompt)}");
+
+                var maxTokens = int.Parse(record.Data.MaxTokensPerParagraph);
+                var overlapSize = int.Parse(record.Data.TokenOverlapSize);
+                var paragraphs = SplitPlainTextParagraphs(record.Data.Text, maxTokens, overlapSize);
+
+                var invocations = await Task.WhenAll(paragraphs.Select(paragraph =>
+                    kernel.InvokeAsync(redact, new KernelArguments { { "text", paragraph } })
+                ));
+
+                var invocationResults = new List<PiiDetectionResult>();
+                for (int i = 0; i < invocations.Length; i++)
+                {
+                    var invocation = invocations[i];
+                    var value = invocation.GetValue<string>();
+                    if (string.IsNullOrWhiteSpace(value)) continue;
+
+                    var result = JsonConvert.DeserializeObject<PiiDetectionResult>(value);
+                    result.PiiDetails.ForEach(x => x.Paragraph = (i + 1).ToString());
+                    invocationResults.Add(result);
+                }
+
+                piiDetectionResult = new PiiDetectionResult
+                {
+                    // If any redaction has PiiFound=true, the merged result should have PiiFound=true
+                    PiiFound = invocationResults.Any(r => r.PiiFound),
+                    PiiDetails = invocationResults.SelectMany(r => r.PiiDetails ?? []).ToList()
+                };
+  
                 var outputRecord = new OpenAiRedactionOutputRecord();
                 outputRecord.RecordId = record.RecordId;
                 outputRecord.Data = new OpenAiRedactionOutputRecord.OutputRecordData();
+                outputRecord.Data.MaxTokensPerParagraph = record.Data.MaxTokensPerParagraph;
+                outputRecord.Data.TokenOverlapSize = record.Data.TokenOverlapSize;
+                outputRecord.Data.ParagraphCount = paragraphs.Count.ToString();
                 outputRecord.Data.RedactedText = piiDetectionResult.PiiFound
                         ? ApplyRedaction(record.Data.Text, piiDetectionResult.PiiDetails, record.Data.MaskingCharacter)
                         : record.Data.Text;
@@ -192,19 +228,24 @@ public class OpenAI_StructuredOutputs
                 outputRecord.Warnings = new List<OpenAiRedactionOutputRecord.OutputRecordMessage>();
                 log.LogInformation($"Warnings {outputRecord.Warnings}");
 
-                outputRecords.Values.Add( outputRecord );
+                outputRecords.Values.Add(outputRecord);
             }
-        return new OkObjectResult(outputRecords);
-        } catch (Exception ex)
+
+            return new OkObjectResult(outputRecords);
+
+        } 
+        catch (Exception ex)
         {
             log.LogInformation($"**** ERROR **** {Environment.NewLine}{ex}");
         }
         return new BadRequestResult();
     }
 
+    #region private
+
     private string ApplyRedaction(string text, List<PiiDetail> piiDetails, string maskingCharacter)
     {
-        if (text == null || piiDetails == null || maskingCharacter == null) 
+        if (text == null || piiDetails == null || maskingCharacter == null)
         {
             throw new Exception("ApplyRedaction requires a valid body");
         }
@@ -213,26 +254,29 @@ public class OpenAI_StructuredOutputs
 
         foreach (var piiDetail in piiDetails)
         {
-            // log.LogInformation(piiDetail.Text); Removing this log as it may expose sensitive information
             string maskedValue = new string(maskingCharacter.FirstOrDefault(), piiDetail.Text.Length);
             redactedText = redactedText.Replace(piiDetail.Text, maskedValue);
         }
 
         return redactedText;
     }
-    
-    #region private
-    public struct PiiDetectionResult
+
+    private int CountTokens(string text)
     {
-        public bool PiiFound { get; set; }
-        public List<PiiDetail> PiiDetails { get; set; }
+        if (string.IsNullOrWhiteSpace(text)) { return 0; }
+
+        var tokenizer = TiktokenTokenizer.CreateForModel("gpt-3.5-turbo");
+        var tokenCount = tokenizer.CountTokens(text);
+        return tokenCount;
     }
 
-    public struct PiiDetail
+    private List<string> SplitPlainTextParagraphs(string text, int maxTokensPerChunk, int tokenOverlapSize)
     {
-        public string Text { get; set; }
-        public string Type { get; set; }
-        public string Context { get; set; }
+        var counter = new TextChunker.TokenCounter(CountTokens);
+        var chunker = TextChunker.SplitPlainTextParagraphs([text], maxTokensPerChunk, tokenOverlapSize, null, counter);
+        return chunker;
     }
+
     #endregion
+
 }
