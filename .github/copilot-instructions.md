@@ -1,0 +1,1 @@
+Whenever making any Azure MCP server calls, you should always use the subscription ID of 5669097f-9a99-4354-b528-addefc61d776 and tenant ID of 16b3c013-d300-468d-ac64-7eda0820b6d3. Always assume Azure AD credentials when trying to connect to Azure services via MCP.
