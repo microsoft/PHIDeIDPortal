@@ -152,7 +152,7 @@ namespace PhiDeidPortal.Ui.Controllers
             var cosmosDocument = GetMetadataRecordByUri(documentUri);
             if (cosmosDocument is null) return new ServiceResponse() { IsSuccess = false, Message = "Document metadata not found for the given author" };
             var deleteCosmos = await _cosmosService.DeleteMetadataRecordAsync(cosmosDocument);
-            if (!deleteCosmos.IsSuccess) return new ServiceResponse() { IsSuccess = false, Message = " Metadata database failure" };
+            if (!deleteCosmos.IsSuccess) return new ServiceResponse() { IsSuccess = false, Message = "Metadata database failure" };
             return new ServiceResponse() { IsSuccess = true };
         }
 
