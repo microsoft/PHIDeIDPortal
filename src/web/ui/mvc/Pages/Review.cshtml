@@ -82,6 +82,12 @@
                                                 <button class="btn btn-secondary download-button" type="button" id="download-button" data-href='@result.Document["metadata_storage_name"]'><i class="bi bi-download"></i> Download</button>
                                             }
                                         }
+                                        @{
+                                            if (Model.IsDeleteFeatureAvailable)
+                                            {
+                                                <button class="btn btn-danger delete-button" type="button" data-href='@result.Document["metadata_storage_path"]'><i class="bi bi-x-lg"></i> Delete</button>
+                                            }
+                                        }
                                         <button class="btn btn-success approve-button" type="button" data-href='@result.Document["metadata_storage_path"]'><i class="bi bi-check-lg"></i> Approve</button>
                                         <button class="btn btn-danger deny-button" type="button" data-href='@result.Document["metadata_storage_path"]'><i class="bi bi-x-lg"></i> Deny</button>
                                     </div>

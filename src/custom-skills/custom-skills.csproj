@@ -9,6 +9,9 @@
   <UserSecretsId>4e26de2e-1466-4b03-b583-feb8b79576c8</UserSecretsId>
 </PropertyGroup>
   <ItemGroup>
+    <Content Include="local.settings.json" />
+  </ItemGroup>
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.46.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.0.0" />
@@ -21,6 +24,8 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.CosmosDB" Version="4.11.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.SignalRService" Version="1.14.0" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" Version="1.0.2" />
+    <PackageReference Include="Microsoft.ML.Tokenizers.Data.Cl100kBase" Version="1.0.2" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.28.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>  

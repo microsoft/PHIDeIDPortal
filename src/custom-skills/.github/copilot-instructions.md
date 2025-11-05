@@ -1,0 +1,1 @@
+Always use Subscription 5669097f-9a99-4354-b528-addefc61d776 and Tenant 16b3c013-d300-468d-ac64-7eda0820b6d3. Always assume Azure AD credentials when trying to connect to Azure services via MCP.

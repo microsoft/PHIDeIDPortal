@@ -11,7 +11,6 @@ using System.Net;
 using System.Reflection.Metadata;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
-
 namespace PhiDeidPortal.Ui.Controllers
 {
     [ApiController]
@@ -125,23 +124,50 @@ namespace PhiDeidPortal.Ui.Controllers
         [FeatureGate(Feature.Delete)]
         public async Task<IActionResult> Delete(DeleteDocumentRequestEntity document)
         {
-            var cosmosDocument = GetMetadataRecordByUri(document.Uri);
-            if (cosmosDocument is null) return BadRequest("Document deleted with errors. Document metadata not found for the given author.");
+            if (String.IsNullOrWhiteSpace(document.Uri)) return BadRequest("Document could not be deleted - invalid URI");
+            var errors = new List<string>();
+
+            var cosmosResponse = await DeleteFromCosmos(document.Uri);
+            if (!cosmosResponse.IsSuccess && cosmosResponse.Message is not null) errors.Add(cosmosResponse.Message);
+            
+            var blobResponse = await DeleteFromBlob(document.Uri);
+            if (!blobResponse.IsSuccess && blobResponse.Message is not null) errors.Add(blobResponse.Message);
+
+            var searchResponse = await DeleteFromSearchIndex(document.Uri);
+            if (!searchResponse.IsSuccess && searchResponse.Message is not null) errors.Add(searchResponse.Message);
+
+            if (errors.Count == 0) return Ok();
+
+            var prefix = "<br />\u2022 ";
+            var errorList = prefix + string.Join(prefix, errors);
+            return BadRequest("Deletion completed with errors:" + errorList);            
+        }
+
+        private async Task<ServiceResponse> DeleteFromCosmos(string documentUri) 
+        {
+            var cosmosDocument = GetMetadataRecordByUri(documentUri);
+            if (cosmosDocument is null) return new ServiceResponse() { IsSuccess = false, Message = "Document metadata not found for the given author" };
             var deleteCosmos = await _cosmosService.DeleteMetadataRecordAsync(cosmosDocument);
-            if (!deleteCosmos.IsSuccess) return BadRequest("Document deleted with errors. Metadata database failure.");
+            if (!deleteCosmos.IsSuccess) return new ServiceResponse() { IsSuccess = false, Message = "Metadata database failure" };
+            return new ServiceResponse() { IsSuccess = true };
+        }
 
-            if (String.IsNullOrWhiteSpace(document.Uri)) return BadRequest("Document could not be deleted. Invalid document URI.");
-            var deleteBlob = await _blobService.DeleteDocumentAsync(_containerName, document.Uri);
-            if (!deleteBlob.IsSuccess) return BadRequest("Document could not be deleted. Storage account failure.");
+        private async Task<ServiceResponse> DeleteFromBlob(string documentUri)
+        {
+            var deleteBlob = await _blobService.DeleteDocumentAsync(_containerName, documentUri);
+            if (!deleteBlob.IsSuccess) return new ServiceResponse() { IsSuccess = false, Message = deleteBlob.Message };
+            return new ServiceResponse() { IsSuccess = true };
+        }
 
-            var searchDocument = _searchService.SearchAsync($"metadata_storage_path eq '{document.Uri}'").Result.FirstOrDefault();
-            if (searchDocument is null) return BadRequest("Document deleted with errors. Document not found in the search index.");
+        private async Task<ServiceResponse> DeleteFromSearchIndex(string documentUri)
+        {
+            var searchDocument = _searchService.SearchAsync($"metadata_storage_path eq '{documentUri}'").Result.FirstOrDefault();
+            if (searchDocument is null) return new ServiceResponse() { IsSuccess = false, Message = "Document not found in the search index" };
             var searchKey = searchDocument.Document["id"]?.ToString();
-            if (searchKey is null) return BadRequest("Document deleted with errors. Document key not found in the search index.");
+            if (searchKey is null) return new ServiceResponse() { IsSuccess = false, Message = "Document key not found in the search index" };
             var deleteIndex = await _searchService.DeleteDocumentAsync(searchKey);
-            if (!deleteIndex.IsSuccess) return BadRequest("Document deleted with errors. Index deletion failure.");
-
-            return Ok();
+            if (!deleteIndex.IsSuccess) return new ServiceResponse() { IsSuccess = false, Message = "Index deletion failure"};
+            return new ServiceResponse() { IsSuccess = true };
         }
 
         [HttpPost]

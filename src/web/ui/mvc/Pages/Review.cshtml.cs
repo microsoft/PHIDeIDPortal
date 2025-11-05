@@ -20,6 +20,7 @@ namespace PhiDeidPortal.Ui.Pages
         public Pageable<SearchResult<SearchDocument>>? Results { get; private set; }
         public bool UserHasElevatedRights { get; set; }
         public bool IsDownloadFeatureAvailable { get; private set; }
+        public bool IsDeleteFeatureAvailable { get; private set; }
 
         public void OnGet()
         {
@@ -40,6 +41,7 @@ namespace PhiDeidPortal.Ui.Pages
             
             UserHasElevatedRights = isElevated;
             IsDownloadFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Download);
+            IsDeleteFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Delete);
         }
 
         public async Task<(string, bool)> GetMetadataRecord(string uri)
