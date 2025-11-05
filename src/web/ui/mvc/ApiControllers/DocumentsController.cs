@@ -11,7 +11,6 @@ using System.Net;
 using System.Reflection.Metadata;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 //using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PhiDeidPortal.Ui.Controllers
