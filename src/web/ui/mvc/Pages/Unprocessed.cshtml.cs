@@ -20,8 +20,9 @@ namespace PhiDeidPortal.Ui.Pages
         {
             if (User.Identity?.Name is null) return;
             var viewFilter = Request.Query["v"].ToString().ToLower() == "me";
+            var searchString = Request.Query["q"].ToString();
             var isElevated = _authService.HasElevatedRights(User);
-            Results = (isElevated && !viewFilter) ? _cosmosService.GetMetadataRecordsByStatus(1) : _cosmosService.GetMetadataRecordsByStatusAndAuthor(1,User.Identity.Name);
+            Results = (isElevated && !viewFilter) ? _cosmosService.GetMetadataRecordsByStatus(1, searchString) : _cosmosService.GetMetadataRecordsByStatusAndAuthor(1, User.Identity.Name, searchString);
         }
     }
 }

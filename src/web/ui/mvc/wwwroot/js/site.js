@@ -165,8 +165,8 @@ phideid.ui = (function () {
 
         setViewAllIcon() { 
             var viewAll = sessionStorage.getItem("viewMe");
-            if (viewAll && viewAll === "me") { $(".viewall-button").html("<i class='bi bi-eye-slash'></i>"); }
-            else { $(".viewall-button").html("<i class='bi bi-eye'></i>"); }
+            if (viewAll && viewAll === "me") { $(".viewall-button").html("<i class='bi bi-person-lines-fill'></i>"); }
+            else { $(".viewall-button").html("<i class='bi bi-people-fill'></i>"); }
         },
 
         showToast(message,isError,showReload) {
@@ -322,6 +322,14 @@ phideid.ui = (function () {
 })();
 
 $(document).ready(function () {
+    // Trigger search on Enter key in search input
+    $(".search-row input[type='text']").on("keydown", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            $(this).closest(".search-row").find(".search-button").click();
+        }
+    });
+
     phideid.ui.initialize();
     $('.redacted-content-td.tagged>div.content').bind('mousemove', function (e) { phideid.ui.showPIIHover($(this).children('.piiHover'), e); }).bind('mouseout', function () { phideid.ui.hidePIIHover($(this).children('.piiHover')); });
     $('.redacted-content-td.tagged>div.content').bind('click', function () {
@@ -366,4 +374,23 @@ $(document).ready(function () {
 
     $(".download-button").bind("click", function () { var file = $(this).attr("data-href"); phideid.ui.downloadFile(file); });
     $(".viewall-button").bind("click", function () { phideid.ui.toggleViewAll(); });
+
+    // Show/hide clear-search-button based on 'q' querystring value
+    function getQueryParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
+    if (!getQueryParam('q')) {
+        $(".clear-search-button").hide();
+    } else {
+        $(".clear-search-button").show();
+    }
+
+    // Clear search button logic
+    $(document).on("click", ".clear-search-button", function () {
+        var $input = $(this).closest(".input-group").find("input[type='text']");
+        $input.val("");
+        sessionStorage.removeItem("searchValue");
+        phideid.ui.search();
+    });
 });

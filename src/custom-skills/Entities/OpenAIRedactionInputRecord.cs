@@ -1,4 +1,4 @@
-namespace AISearch.CustomFunctions
+namespace PhiDeidPortal.CustomFunctions.Entities
 {
     public class OpenAiRedactionInputRecord
     {
@@ -8,6 +8,7 @@ namespace AISearch.CustomFunctions
             public string MaskingCharacter { get; set; } = "*";
             public string MaxTokensPerParagraph { get; set; } = "4096";
             public string TokenOverlapSize { get; set; } = "25";
+            public string Environment { get; set;  } = "Default";
         }
 
         public string RecordId { get; set; }

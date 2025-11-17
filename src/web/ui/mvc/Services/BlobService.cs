@@ -36,38 +36,34 @@ namespace PhiDeidPortal.Ui.Services
             _blobServiceClient = new BlobServiceClient(new Uri(storageAccountUri), credential);
         }
 
-        public async Task<string> UploadDocumentAsync(IFormFile file, string containerName, string blobName)
+        public async Task<string> UploadDocumentAsync(string container, string blob, IFormFile file)
         {
-            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-
-            using (Stream stream = file.OpenReadStream())
-            {
-                await containerClient.UploadBlobAsync(blobName, stream);
-            }
-
-            var blobClient = containerClient.GetBlobClient(blobName);
-
-            return blobClient.Uri.ToString();
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(container);
+            using Stream stream = file.OpenReadStream();
+            await containerClient.UploadBlobAsync(blob, stream);
+            return containerClient.GetBlobClient(blob).Uri.ToString();
         }
 
-        public async Task<Stream> GetDocumentStreamAsync(string containerName, string fileName)
+        public async Task<ServiceResponse> SetBlobUserDefinedMetadataAsync(string container, string blob, IDictionary<string, string> metadata)
         {
-            var docBlobClient = _blobServiceClient
-                .GetBlobContainerClient(containerName)
-                .GetBlobClient(fileName);
+            var blobClient = GetBlobClient(container, blob);
+            var exists = await blobClient.ExistsAsync();
+            if (!exists.Value) { return new ServiceResponse() { IsSuccess = false, Code = HttpStatusCode.NotFound, Message = "Document not found in the storage account" }; }
+            await blobClient.SetMetadataAsync(metadata);
+            return new ServiceResponse() { IsSuccess = true, Code = HttpStatusCode.OK, Message = "Metadata set successfully" };
+        }
 
+        public async Task<Stream> GetDocumentStreamAsync(string container, string blob)
+        {
+            var docBlobClient = GetBlobClient(container, blob);
             var blobStream = await docBlobClient.OpenReadAsync();
-
             return blobStream;
         }
 
-        public async Task<ServiceResponse> DeleteDocumentAsync(string containerName, string uri)
+        public async Task<ServiceResponse> DeleteDocumentAsync(string container, string uri)
         {
-            string blobName = $"{Path.GetFileName(uri)}";           
-            
-            var docBlobClient = _blobServiceClient
-                .GetBlobContainerClient(containerName)
-                .GetBlobClient(blobName);
+            string blobName = $"{Path.GetFileName(uri)}";
+            var docBlobClient = GetBlobClient(container, blobName);
 
             var exists = docBlobClient.Exists();
             if (!exists) { return new ServiceResponse() { IsSuccess = false, Code = HttpStatusCode.NotFound, Message = "Document not found in the storage account" }; } 
@@ -76,11 +72,10 @@ namespace PhiDeidPortal.Ui.Services
             return new ServiceResponse() { IsSuccess = delete.Value, Code = delete.Value == true ? HttpStatusCode.OK : HttpStatusCode.BadRequest, Message = delete.Value == true ? "Document deleted from the storage account" : "Document not deleted from storage account - BadRequest" };
         }
 
-        public async Task<Uri> GetSasUriAsync(string containerName, string fileName)
+        public async Task<Uri> GetSasUriAsync(string container, string blob)
         {
-            var blobContainerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-            var blobClient = blobContainerClient.GetBlobClient(fileName); // blob name
-                                                                             // Get a user delegation key for the Blob service that's valid for 2 hours.
+            var blobClient = GetBlobClient(container, blob);
+            // Get a user delegation key for the Blob service that's valid for 2 hours.
             var userDelegationKey = _blobServiceClient.GetUserDelegationKey(DateTimeOffset.UtcNow,
                                                                             DateTimeOffset.UtcNow.AddHours(2));
             var sasBuilder = new BlobSasBuilder()
@@ -100,6 +95,11 @@ namespace PhiDeidPortal.Ui.Services
             };
 
             return blobUriBuilder.ToUri();
+        }
+
+        private BlobClient GetBlobClient(string container, string blob)
+        {
+            return _blobServiceClient.GetBlobContainerClient(container).GetBlobClient(blob);
         }
     }
 }

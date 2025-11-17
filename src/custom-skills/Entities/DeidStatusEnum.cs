@@ -1,4 +1,4 @@
-namespace AISearch.CustomFunctions
+namespace PhiDeidPortal.CustomFunctions.Entities
 {
     public enum DeidStatus
     {

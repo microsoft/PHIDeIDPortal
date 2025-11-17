@@ -142,7 +142,7 @@ namespace PhiDeidPortal.Ui
             app.UseEndpoints(endpoints => 
             {
                 endpoints.MapHub<CosmosDocuments>("/cosmosdocuments");
-                endpoints.MapControllers(); 
+                endpoints.MapControllers();
             });
 
             app.MapRazorPages();

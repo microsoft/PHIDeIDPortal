@@ -1,9 +1,8 @@
 using Microsoft.Azure.Cosmos;
-using Newtonsoft.Json;
-using System;
-using System.Threading.Tasks;
+using PhiDeidPortal.CustomFunctions.Entities;
+using static PhiDeidPortal.CustomFunctions.Entities.EnvironmentVariables;
 
-namespace AISearch.CustomFunctions
+namespace PhiDeidPortal.CustomFunctions.Services
 {
     public class CosmosDBService
     {
@@ -17,13 +16,13 @@ namespace AISearch.CustomFunctions
         private Database _database;
         private Container _container;
 
-        public CosmosDBService(string endpointUri, string primaryKey, string databaseName, string containerName, string partitionKey)
+        public CosmosDBService()
         {
-            _endpointUri = endpointUri;
-            _primaryKey = primaryKey;
-            _databaseName = databaseName;
-            _containerName = containerName;
-            _partitionKey = partitionKey;
+            _endpointUri = Environment.GetEnvironmentVariable(CosmosEndpointUri);
+            _primaryKey = Environment.GetEnvironmentVariable(CosmosPrimaryKey);
+            _databaseName = Environment.GetEnvironmentVariable(CosmosDatabaseName);
+            _containerName = Environment.GetEnvironmentVariable(CosmosContainerName);
+            _partitionKey = Environment.GetEnvironmentVariable(CosmosPartitionKey);
         }
 
         public async Task InitializeAsync()

@@ -26,6 +26,7 @@ namespace PhiDeidPortal.Ui.Controllers
         private readonly IFeatureService _featureService;
 
         private readonly string _containerName = "";
+        private readonly string _environment;
 
         public DocumentsController(IBlobService blobService, IConfiguration configuration, CosmosClient cosmosClient, IAISearchService searchService, ICosmosService cosmosService, Services.IAuthorizationService authorizationService, IFeatureService featureService)
         {
@@ -38,6 +39,7 @@ namespace PhiDeidPortal.Ui.Controllers
             _featureService = featureService;
 
             _containerName = $"{_storageConfiguration["Container"]}";
+            _environment = configuration["Environment"] ?? "Default";
         }
 
         [HttpGet]
@@ -69,29 +71,35 @@ namespace PhiDeidPortal.Ui.Controllers
                 organizationalMetadata.Add(s);
             }
 
-            string uri = "";
+            string uri;
             try
             {
-                uri = await _blobService.UploadDocumentAsync(file, _containerName, blobName);
+                uri = await _blobService.UploadDocumentAsync(_containerName, blobName, file);
                 if (String.IsNullOrWhiteSpace(uri)) { throw new Exception(); }
+                var response = await _blobService.SetBlobUserDefinedMetadataAsync(_containerName, blobName, new Dictionary<string, string>
+                {
+                    { "environment", _environment }
+                });
+                if (!response.IsSuccess) { return StatusCode(500, "Error updating storage account metadata."); }
             }
             catch
             {
-                return StatusCode(500, "Cannot connect to the storage account.");
+                return StatusCode(500, "Error connecting to the storage account.");
             }
 
             try
             {
                 MetadataRecord metadataRecord = new(
-                id: Guid.NewGuid().ToString(),
-                FileName: blobName,
-                Uri: uri,
-                Author: User.Identity.Name,
-                Status: 1,
-                OrganizationalMetadata: organizationalMetadata.ToArray(),
-                LastIndexed: DateTime.MinValue,
-                AwaitingIndex: true,
-                JustificationText: ""
+                    id: Guid.NewGuid().ToString(),
+                    Author: User.Identity?.Name ?? "",
+                    AwaitingIndex: true,
+                    Environment: _environment,
+                    FileName: blobName,
+                    JustificationText: "",
+                    LastIndexed: DateTime.MinValue,
+                    OrganizationalMetadata: organizationalMetadata.ToArray(),
+                    Status: 1,
+                    Uri: uri
                 );
 
                 var upload = await _cosmosService.UpsertMetadataRecordAsync(metadataRecord);
@@ -99,7 +107,7 @@ namespace PhiDeidPortal.Ui.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest($"Cannot upload document metadata to the database.");
+                return BadRequest($"Error updating document database metadata.");
             }
 
             var reupload = _searchConfiguration["ReindexOnUpload"] ?? "false";
@@ -211,14 +219,15 @@ namespace PhiDeidPortal.Ui.Controllers
 
             MetadataRecord newRecord = new(
                 id: Guid.NewGuid().ToString(),
-                FileName: oldRecord.FileName,
-                Uri: oldRecord.Uri,
                 Author: oldRecord.Author,
-                Status: (int)DeidStatus.JustificationApprovalPending,
-                OrganizationalMetadata: oldRecord.OrganizationalMetadata,
-                LastIndexed: oldRecord.LastIndexed,
                 AwaitingIndex: true,
-                JustificationText: document.Comment ??= ""
+                Environment: oldRecord.Environment,
+                FileName: oldRecord.FileName,
+                JustificationText: document.Comment ??= "",
+                LastIndexed: oldRecord.LastIndexed,
+                OrganizationalMetadata: oldRecord.OrganizationalMetadata,
+                Status: (int)DeidStatus.JustificationApprovalPending,
+                Uri: oldRecord.Uri
                 );
 
             await _cosmosService.DeleteMetadataRecordAsync(oldRecord);
@@ -239,14 +248,15 @@ namespace PhiDeidPortal.Ui.Controllers
 
             MetadataRecord newRecord = new(
                 id: Guid.NewGuid().ToString(),
-                FileName: oldRecord.FileName,
-                Uri: oldRecord.Uri,
                 Author: oldRecord.Author,
-                Status: (int)status,
-                OrganizationalMetadata: oldRecord.OrganizationalMetadata,
-                LastIndexed: oldRecord.LastIndexed,
                 AwaitingIndex: true,
-                JustificationText: oldRecord.JustificationText
+                Environment: oldRecord.Environment,
+                FileName: oldRecord.FileName,
+                JustificationText: oldRecord.JustificationText,
+                LastIndexed: oldRecord.LastIndexed,
+                OrganizationalMetadata: oldRecord.OrganizationalMetadata,
+                Status: (int)status,
+                Uri: oldRecord.Uri
                 );
 
             await _cosmosService.DeleteMetadataRecordAsync(oldRecord);

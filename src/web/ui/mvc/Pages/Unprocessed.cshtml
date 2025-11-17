@@ -9,16 +9,18 @@
 <table id="tblDocs" class="table">
     <thead>
         <tr>
+            <th nowrap>Environment</th>
             <th nowrap>Document</th>
             <th>Author</th>
             <th>Last Indexed</th>
-            <th nowrap>Metadata</th>
+            <th nowrap>Tags</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var result in Model.Results)
         {
             <tr class="@(i % 2 == 0 ? "row-even" : "row-odd")">
+                <td>@result.Environment</td>
                 <td>@result.FileName</td>
                 <td>@result.Author.ToString().Split('@')[0]</td>
                 <td class="date-column">
