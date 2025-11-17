@@ -4,8 +4,10 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
+using PhiDeidPortal.CustomFunctions.Entities;
+using PhiDeidPortal.CustomFunctions.Services;
 
-namespace AISearch.CustomFunctions
+namespace PhiDeidPortal.CustomFunctions.Functions
 {
     public class WordRedactionFunction
     {
@@ -39,6 +41,29 @@ namespace AISearch.CustomFunctions
             foreach (var record in data.Values)
             {
                 if (record == null || record.RecordId == null) continue;
+
+                _logger.LogInformation($"Evaluating record {record.RecordId}");
+
+                var featureService = new FeatureService();
+                if (!featureService.IsFeatureEnabled(record.Data.Environment, Feature.RegexRedaction))
+                {
+                    response.Values.Add(new WordRedactionOutputRecord
+                    {
+                        RecordId = record.RecordId,
+                        Data = new WordRedactionOutputRecord.OutputRecordData
+                        {
+                            Text = record.Data.Text,
+                            RedactedText = record.Data.Text,
+                            RedactedEntities = "[]"
+                        },
+                        Warnings = new List<WordRedactionOutputRecord.OutputRecordMessage>
+                        {
+                            new() { Message = "Feature is not enabled." }
+                        }
+                    });
+
+                    continue;
+                }
 
                 var responseRecord = new WordRedactionOutputRecord
                 {

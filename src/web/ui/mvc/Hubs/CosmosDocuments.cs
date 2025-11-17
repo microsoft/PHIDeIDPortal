@@ -15,7 +15,7 @@ namespace PhiDeidPortal.Ui.Hubs
             _userContextService = userContextService;
         }
 
-        public async Task UpdateCounts(CosmosRecord cosmosRecord)
+        public async Task UpdateCounts()
         {
             var currentUser = _userContextService.User;
             if (currentUser == null)

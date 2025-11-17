@@ -1,5 +1,4 @@
-
-namespace custom_skills.Models
+namespace PhiDeidPortal.CustomFunctions.Entities
 {
     internal class PiiDetail
     {
