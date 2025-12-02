@@ -1,6 +1,3 @@
-using AISearch.CustomFunctions;
-using custom_skills.Models;
-using custom_skills.Utilities;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Azure.Functions.Worker;
@@ -8,8 +5,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using PhiDeidPortal.CustomFunctions.Entities;
+using PhiDeidPortal.CustomFunctions.Services;
 
-namespace CosmosDBMonitor
+namespace PhiDeidPortal.CustomFunctions.Functions
 {
     public class Function
     {
@@ -66,7 +65,7 @@ namespace CosmosDBMonitor
                                     PropertyNameCaseInsensitive = true,
                                     DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
                                 };
-                                options.Converters.Add(new StatusConverter());
+                                options.Converters.Add(new StatusConverterService());
 
                                 var cosmosRecordRaw = JsonSerializer.Deserialize<CosmosRecordRaw>(jsonElement.GetRawText(), options);
 

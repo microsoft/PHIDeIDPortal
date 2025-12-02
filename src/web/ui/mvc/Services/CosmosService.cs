@@ -4,6 +4,7 @@ using Microsoft.Azure.Cosmos;
 using PhiDeidPortal.Ui.Entities;
 using System;
 using System.Net;
+using System.Reflection.Metadata.Ecma335;
 
 namespace PhiDeidPortal.Ui.Services
 {
@@ -27,14 +28,14 @@ namespace PhiDeidPortal.Ui.Services
             _cosmosPartitionKey = _cosmosConfiguration["PartitionKey"] ?? throw new ArgumentNullException(nameof(_cosmosPartitionKey));
         }
 
-        public List<MetadataRecord> GetAllMetadataRecords()
+        public List<MetadataRecord> GetAllMetadataRecords(string? searchString)
         {
-            return GetMetadataRecords().ToList();
+            return GetMetadataRecords(searchString).ToList();
         }
 
-        public List<MetadataRecord> GetAllMetadataRecordsByAuthor(string author)
+        public List<MetadataRecord> GetAllMetadataRecordsByAuthor(string author, string? searchString)
         {
-            return GetMetadataRecords().Where(d => (d.Author == author || d.Author == "N/A")).ToList();
+            return GetMetadataRecords(searchString).Where(d => (d.Author == author || d.Author == "N/A")).ToList();
         }
 
         public MetadataRecord? GetMetadataRecordById(string docId)
@@ -52,22 +53,27 @@ namespace PhiDeidPortal.Ui.Services
             return GetMetadataRecords().Where(d => d.Uri == uri && (d.Author == author || d.Author == "N/A")).FirstOrDefault();
         }
 
-        public List<MetadataRecord> GetMetadataRecordsByStatus(int status)
+        public List<MetadataRecord> GetMetadataRecordsByStatus(int status, string? searchString)
         {
-            return GetMetadataRecords().Where(d => (d.Status == status)).ToList();
+            return GetMetadataRecords(searchString).Where(d => (d.Status == status)).ToList();
         }
 
-        public List<MetadataRecord> GetMetadataRecordsByStatusAndAuthor(int status, string author)
+        public List<MetadataRecord> GetMetadataRecordsByStatusAndAuthor(int status, string author, string? searchString)
         {
-            return GetMetadataRecords().Where(d => d.Status == status && (d.Author == author || d.Author == "N/A")).ToList();
+            return GetMetadataRecords(searchString).Where(d => d.Status == status && (d.Author == author || d.Author == "N/A")).ToList();
         }
 
-        private IOrderedQueryable<MetadataRecord> GetMetadataRecords()
+        private IOrderedQueryable<MetadataRecord> GetMetadataRecords(string? searchString = null)
         {
-            return _cosmosClient
+            var result = _cosmosClient
             .GetDatabase(_cosmosDbName)
             .GetContainer(_cosmosContainerName)
             .GetItemLinqQueryable<MetadataRecord>(true);
+
+            return (IOrderedQueryable<MetadataRecord>)(string.IsNullOrWhiteSpace(searchString) ? result : result.Where(y => y.Environment.Contains(searchString, StringComparison.CurrentCultureIgnoreCase) ||
+                        y.Uri.Contains(searchString, StringComparison.CurrentCultureIgnoreCase) ||
+                        y.FileName.ToLower().Contains(searchString.ToLower()) ||
+                        y.OrganizationalMetadata.Any(om => om.ToLower().Contains(searchString.ToLower()))));
         }
 
         public StatusSummary GetSummaryByAuthor(string username)

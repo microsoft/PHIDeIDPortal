@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using PhiDeidPortal.CustomFunctions.Entities;
+using PhiDeidPortal.CustomFunctions.Services;
 
-namespace AISearch.CustomFunctions
+namespace PhiDeidPortal.CustomFunctions.Functions
 {
     public class MetadataSyncFunction
     {
@@ -14,12 +16,7 @@ namespace AISearch.CustomFunctions
         public MetadataSyncFunction(ILogger<MetadataSyncFunction> logger)
         {
             _logger = logger;
-            _cosmosDBService = new CosmosDBService(
-                Environment.GetEnvironmentVariable("COSMOS_ENDPOINT_URI"),
-                Environment.GetEnvironmentVariable("COSMOS_PRIMARY_KEY"),
-                Environment.GetEnvironmentVariable("COSMOS_DATABASE_NAME"),
-                Environment.GetEnvironmentVariable("COSMOS_CONTAINER_NAME"),
-                Environment.GetEnvironmentVariable("COSMOS_PARTITION_KEY"));
+            _cosmosDBService = new CosmosDBService();
         }
 
         [Function("MetadataSyncFunction")]
@@ -62,15 +59,16 @@ namespace AISearch.CustomFunctions
                     // If no, create a new record with input data. This should be created through the Web UI
                     if (cosmosRecord == null)
                     {
-                        cosmosRecord = new CosmosRecord { 
+                        cosmosRecord = new CosmosRecord {
                             id = Guid.NewGuid().ToString(),
-                            Uri = record.Data.Uri, 
-                            FileName = record.Data.Uri.Split('/').Last(),
-                            Status = record.Data.Status,
-                            JustificationText = String.Empty,
                             Author = "N/A",
+                            Environment = "Default",
+                            FileName = record.Data.Uri.Split('/').Last(),
+                            JustificationText = String.Empty,
                             LastIndexed = DateTime.UtcNow,
-                            OrganizationalMetadata = []                          
+                            OrganizationalMetadata = [],
+                            Status = record.Data.Status,
+                            Uri = record.Data.Uri
                         };
                     }
 

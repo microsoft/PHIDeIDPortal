@@ -1,10 +1,9 @@
-﻿using System;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace custom_skills.Utilities
+namespace PhiDeidPortal.CustomFunctions.Services
 {
-    public class StatusConverter : JsonConverter<string>
+    public class StatusConverterService : JsonConverter<string>
     {
         public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

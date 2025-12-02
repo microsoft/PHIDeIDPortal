@@ -1,10 +1,13 @@
+* {
+    font-family: Roboto, 'Segoe UI', Calibri, 'Trebuchet MS', sans-serif;
+}
 html {
   font-size: 14px;
 }
 
 @media (min-width: 768px) {
   html {
-    font-size: 16px;
+    font-size: 15px;
   }
 }
 
@@ -50,7 +53,10 @@ td.tdtop {
 }
 
 .navbar-container div.col {
-    padding-left: 10px !important;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+    padding-top: 15px;
+    padding-bottom: 15px;
 }
 
 .tab {
@@ -145,15 +151,9 @@ td.tdtop {
     margin-top: 0;
     background: #f4f4f4;
     cursor: pointer;
-}
-
-.tagCloudElem {
-    display: inline-block;
-    padding: 8px 24px;
-    border-radius: 8px;
-    margin: 8px 4px;
-    margin-top: 0;
-    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 0.8em;
+    font-weight: 500;
 }
 
 td .tagCloudElem {
@@ -299,4 +299,14 @@ td .tagCloudElemPlaceholder {
 
 .alert {
     padding: 10px 16px;
+}
+
+.environment-header {
+    background-color: #616970;
+    color: #fff;
+    font-size: 0.8em;
+    padding: 10px 15px;
+    letter-spacing: 1px;
+    text-align: right;
+    font-weight: 500;
 }

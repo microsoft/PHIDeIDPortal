@@ -8,10 +8,11 @@
 <table id="tblDocs" class="table">
     <thead>
         <tr>
+            <th nowrap>Environment</th>
             <th nowrap>Document</th>
             <th>Author</th>
             <th nowrap>Redacted Content</th>
-            <th nowrap>Metadata</th>
+            <th nowrap>Tags</th>
         </tr>
     </thead>
     <tbody>
@@ -23,6 +24,7 @@
                 var redactedSummary = ((string)result.Document["redactedContent"]) is var rc && rc.Length > 512 ? $"{rc[..511]}..." : rc;
 
                 <tr class="@(i % 2 == 0 ? "row-even" : "row-odd")">
+                    <td class="tdtop">@result.Document["environment"]</td>
                     <td class="tdtop">@result.Document["metadata_storage_name"]</td>
                     <td class="tdtop">@result.Document["author"].ToString().Split('@')[0]</td>
                     <!-- <td style="vertical-align: top;">@result.Document["content"]</td> -->

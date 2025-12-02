@@ -1,15 +1,14 @@
-using CosmosDBMonitor;
 using System.Text.Json.Serialization;
-using custom_skills.Utilities;
+using PhiDeidPortal.CustomFunctions.Services;
 
-namespace custom_skills.Models
+namespace PhiDeidPortal.CustomFunctions.Entities
 {
     public class CosmosRecordRaw
     {
         public string id { get; set; }
         public string Uri { get; set; }
         public string FileName { get; set; }
-        [JsonConverter(typeof(StatusConverter))]
+        [JsonConverter(typeof(StatusConverterService))]
         public string Status { get; set; }
         public string Author { get; set; }
         public bool AwaitingIndex { get; set; }

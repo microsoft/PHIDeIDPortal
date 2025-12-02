@@ -1,9 +1,15 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - PhiDeidPortal.Ui</title>
+    <title>@ViewData["Title"]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/bootstrap.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/bootstrap-icons.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -15,15 +21,21 @@
     <script src="~/js/moment-timezone.min.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/signalr/dist/browser/signalr.min.js" asp-append-version="true"></script>
-
     @await RenderSectionAsync("Scripts", required: false)
 </head>
 <body>
     <header>
+        @{
+            var _titleText = Configuration["TitleText"] ?? "Document Portal";
+            var _environment = Configuration["Environment"] ?? "Default";
+        }
+        <div class="environment-header">
+            <i class="bi bi-geo-alt-fill"></i> ENVIRONMENT - @_environment
+        </div>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow">
             <div class="row navbar-container">
                 <div class="col">
-                    <a class="navbar-brand" asp-area="" asp-page="/Index">PHI DeID Portal</a>
+                    <a class="navbar-brand" asp-area="" asp-page="/Index">@_titleText</a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                             aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
@@ -95,7 +107,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2024 - PHI DeID Portal
+            @Configuration["FooterText"]
         </div>
     </footer>
 
@@ -163,7 +175,6 @@
             }
         }
     });
-
 
     connection.start().catch(function (err) {
         return console.error(err.toString());

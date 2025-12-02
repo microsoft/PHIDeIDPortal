@@ -1,6 +1,6 @@
-namespace AISearch.CustomFunctions
+namespace PhiDeidPortal.CustomFunctions.Entities
 {
-        public class RegexRedactionOutputRecord
+        public class WordRedactionOutputRecord
         {
             public class OutputRecordData
             {

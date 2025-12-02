@@ -9,10 +9,11 @@
 <table id="tblDocs index" class="table">
     <thead>
         <tr>
+            <th nowrap>Environment</th>
             <th nowrap>Document</th>
-            <th>Author</th>
-            <th>Status</th>
-            <th nowrap>Metadata</th>
+            <th nowrap>Author</th>
+            <th nowrap>Status</th>
+            <th nowrap>Tags</th>
             <th class="center">AI Reviewed</th>
             <th>AI Reviewed Date</th>
             <th class="center">AI Review Status</th>
@@ -22,6 +23,7 @@
         @foreach (var result in Model.Results)
         {
             <tr class="@(i % 2 == 0 ? "row-even" : "row-odd")">
+                <td>@result.Environment</td>
                 <td>@result.FileName</td>
                 <td>@result.Author.ToString().Split('@')[0]</td>
                 <td>

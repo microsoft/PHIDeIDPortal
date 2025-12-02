@@ -1,13 +1,17 @@
-namespace AISearch.CustomFunctions
+namespace PhiDeidPortal.CustomFunctions.Entities
 {
-        public class WordRedactionOutputRecord
+        public class OpenAiRedactionOutputRecord
         {
             public class OutputRecordData
             {
                 public string Text { get; set; } = "";
                 public string RedactedText { get; set; } = "";
                 public string RedactedEntities { get; set; } = "";
-            }
+                public string MaxTokensPerParagraph { get; set; }
+                public string TokenOverlapSize { get; set; }
+                public string ParagraphCount { get; set; }
+
+        }
 
             public class OutputRecordMessage
             {
