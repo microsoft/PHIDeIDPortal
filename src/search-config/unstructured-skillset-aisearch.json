@@ -65,6 +65,10 @@
         {
           "name": "text",
           "source": "/document/mergeSkillOutput"
+        },
+        {
+          "name": "environment",
+          "source": "/document/environment"
         }
       ],
       "outputs": [
