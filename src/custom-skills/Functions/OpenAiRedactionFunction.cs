@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.Tokenizers;
 using Microsoft.SemanticKernel;
@@ -46,12 +47,15 @@ namespace PhiDeidPortal.CustomFunctions.Functions
             {
                 _logger.LogInformation($"Deployment Name: {Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiDeploymentName)}");
                 _logger.LogInformation($"End Point: {Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiEndpoint)}");
-     
+
+                var client = new HttpClient() { Timeout = TimeSpan.FromMinutes(5) };
+
                 kernel = Kernel.CreateBuilder()
                 .AddAzureOpenAIChatCompletion(
                     deploymentName: Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiDeploymentName),
                     endpoint: Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiEndpoint),
-                    apiKey: Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiApiKey)
+                    apiKey: Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiApiKey),
+                    httpClient: client
                 )
                 .Build();
             }
@@ -157,6 +161,8 @@ namespace PhiDeidPortal.CustomFunctions.Functions
                     var maxTokens = int.Parse(record.Data.MaxTokensPerParagraph);
                     var overlapSize = int.Parse(record.Data.TokenOverlapSize);
                     var paragraphs = SplitPlainTextParagraphs(record.Data.Text, maxTokens, overlapSize);
+
+                    _logger.LogInformation($"Paragraph count: {paragraphs.Count}");
 
                     var invocations = await Task.WhenAll(paragraphs.Select(paragraph =>
                         kernel.InvokeAsync(redact, new KernelArguments { { "text", paragraph } })
