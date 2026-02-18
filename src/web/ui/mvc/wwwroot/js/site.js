@@ -144,6 +144,31 @@ phideid.ui = (function () {
             $(".search-row input[type='text']").val(value);
         },
 
+        sanitizePath(path) {
+            if (!path) return null;
+            // Ensure path is a string and trim whitespace
+            path = String(path).trim();
+            if (path.length === 0) return null;
+
+            // Disallow protocol-relative URLs
+            if (path.startsWith("//")) return null;
+
+            // Disallow dangerous schemes such as javascript:, data:, vbscript:
+            var lower = path.toLowerCase();
+            if (lower.startsWith("javascript:") ||
+                lower.startsWith("data:") ||
+                lower.startsWith("vbscript:")) {
+                return null;
+            }
+
+            // Disallow absolute URLs with a scheme like http:, https:, etc.
+            var schemeMatch = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(path);
+            if (schemeMatch) return null;
+
+            // Allow same-origin absolute paths or relative paths
+            return path;
+        },
+
         search(path) {
             var searchValue = $(".search-row input[type='text']").val();
             sessionStorage.setItem("searchValue", searchValue);
@@ -152,7 +177,8 @@ phideid.ui = (function () {
             var viewAll = sessionStorage.getItem("viewMe");
             if (viewAll && viewAll === "me") parts.push("v=me");
             var params = parts.length > 0 ? "?" + parts.join("&") : "";
-            var destination = (path) ? path : location.pathname;
+            var safePath = phideid.ui.sanitizePath(path);
+            var destination = safePath ? safePath : location.pathname;
             location.href = destination + params;
         },
 
