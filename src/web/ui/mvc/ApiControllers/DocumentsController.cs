@@ -1,4 +1,5 @@
-﻿using Azure.Search.Documents.Models;
+﻿using Azure.Search.Documents;
+using Azure.Search.Documents.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
@@ -181,8 +182,8 @@ namespace PhiDeidPortal.Ui.Controllers
 
         private async Task<ServiceResponse> DeleteFromSearchIndex(string documentUri)
         {
-            var safeUri = documentUri.Replace("'", "''");
-            var searchDocument = (await _searchService.SearchAsync($"metadata_storage_path eq '{safeUri}'")).FirstOrDefault();
+            var filter = SearchFilter.Create($"metadata_storage_path eq {documentUri}");
+            var searchDocument = (await _searchService.SearchAsync(filter)).FirstOrDefault();
             if (searchDocument is null) return new ServiceResponse() { IsSuccess = false, Message = "Document not found in the search index" };
             var searchKey = searchDocument.Document["id"]?.ToString();
             if (searchKey is null) return new ServiceResponse() { IsSuccess = false, Message = "Document key not found in the search index" };
@@ -303,8 +304,8 @@ namespace PhiDeidPortal.Ui.Controllers
 
         private async Task<string> ResetDocumentAsync(string uri)
         {
-            var safeUri = uri.Replace("'", "''");
-            var searchDocument = (await _searchService.SearchAsync($"metadata_storage_path eq '{safeUri}'")).FirstOrDefault();
+            var filter = SearchFilter.Create($"metadata_storage_path eq {uri}");
+            var searchDocument = (await _searchService.SearchAsync(filter)).FirstOrDefault();
             if (searchDocument is null) return "Reset document failed. Document not found in the search index.";
             var searchKey = searchDocument.Document["id"]?.ToString();
             if (searchKey is null) return "Reset document failed. Document key not found in the search index.";
