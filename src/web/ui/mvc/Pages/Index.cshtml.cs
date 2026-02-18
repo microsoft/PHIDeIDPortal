@@ -9,7 +9,7 @@ namespace PhiDeidPortal.Ui.Pages
 {
     [Authorize]
     [FeatureGate(Feature.AllDocumentsView)]
-    public class IndexModel(IAuthorizationService authorizationService, ICosmosService cosmosService, IAISearchService searchService, IFeatureService featureService, IConfiguration configuration) : PageModel
+    public class IndexModel(IAuthorizationService authorizationService, ICosmosService cosmosService, IAISearchService searchService, IFeatureService featureService) : PageModel
     {
         private readonly IAISearchService _searchService = searchService;
         private readonly IAuthorizationService _authService = authorizationService;

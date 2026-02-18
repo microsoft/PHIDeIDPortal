@@ -116,7 +116,8 @@ namespace PhiDeidPortal.CustomFunctions.Functions
                     {
                         ResponseFormat = chatResponseFormat,
                         Temperature = 0.0,
-                        ChatSystemPrompt = systemPrompt
+                        ChatSystemPrompt = systemPrompt,
+                        MaxTokens = 16384
                     }
                 );
 
@@ -174,6 +175,9 @@ namespace PhiDeidPortal.CustomFunctions.Functions
                         var invocation = invocations[i];
                         var value = invocation.GetValue<string>();
                         if (string.IsNullOrWhiteSpace(value)) continue;
+
+                        ///////////////////// DEBUG LOGGING /////////////////////
+                        _logger.LogInformation($"Output token count : {CountTokens(value)}");
 
                         var result = JsonConvert.DeserializeObject<PiiDetectionResult>(value);
                         result.PiiDetails.ForEach(x => x.Paragraph = (i + 1).ToString());

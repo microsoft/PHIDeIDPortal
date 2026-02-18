@@ -25,13 +25,12 @@
 </head>
 <body>
     <header>
+        @await Component.InvokeAsync("EnvironmentSelector")
         @{
             var _titleText = Configuration["TitleText"] ?? "Document Portal";
-            var _environment = Configuration["Environment"] ?? "Default";
+            var _authEnvCount = Context.Items["AuthorizedEnvironmentCount"] is int value ? value : 0;
+            if (_authEnvCount == 0) Context.Response.Redirect("/Unauthorized");
         }
-        <div class="environment-header">
-            <i class="bi bi-geo-alt-fill"></i> ENVIRONMENT - @_environment
-        </div>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow">
             <div class="row navbar-container">
                 <div class="col">

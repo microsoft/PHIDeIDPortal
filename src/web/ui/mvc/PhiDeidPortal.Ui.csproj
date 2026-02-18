@@ -19,6 +19,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.1" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.56.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Cosmos" Version="1.8.0" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.1" />
     <PackageReference Include="Microsoft.FeatureManagement.AspNetCore" Version="4.3.0" />
     <PackageReference Include="Microsoft.Identity.Abstractions" Version="9.6.0" />
@@ -26,6 +27,7 @@
     <PackageReference Include="Microsoft.Identity.Web" Version="4.1.1" />
     <PackageReference Include="Microsoft.Identity.Web.UI" Version="4.1.1" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.68.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.71.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>  
 </Project>

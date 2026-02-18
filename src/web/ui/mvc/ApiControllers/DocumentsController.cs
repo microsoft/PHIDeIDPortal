@@ -11,6 +11,7 @@ using System.Net;
 using System.Reflection.Metadata;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 namespace PhiDeidPortal.Ui.Controllers
 {
     [ApiController]
@@ -24,11 +25,11 @@ namespace PhiDeidPortal.Ui.Controllers
         private readonly IAISearchService _searchService;
         private readonly Services.IAuthorizationService _authorizationService;
         private readonly IFeatureService _featureService;
+        private readonly ICacheService _cacheService;
 
         private readonly string _containerName = "";
-        private readonly string _environment;
 
-        public DocumentsController(IBlobService blobService, IConfiguration configuration, CosmosClient cosmosClient, IAISearchService searchService, ICosmosService cosmosService, Services.IAuthorizationService authorizationService, IFeatureService featureService)
+        public DocumentsController(IBlobService blobService, IConfiguration configuration, CosmosClient cosmosClient, IAISearchService searchService, ICosmosService cosmosService, Services.IAuthorizationService authorizationService, IFeatureService featureService, ICacheService cacheService)
         {
             _blobService = blobService;
             _storageConfiguration = configuration.GetSection("StorageAccount");
@@ -37,9 +38,9 @@ namespace PhiDeidPortal.Ui.Controllers
             _searchService = searchService;
             _authorizationService = authorizationService;
             _featureService = featureService;
+            _cacheService = cacheService;
 
             _containerName = $"{_storageConfiguration["Container"]}";
-            _environment = configuration["Environment"] ?? "Default";
         }
 
         [HttpGet]
@@ -57,6 +58,15 @@ namespace PhiDeidPortal.Ui.Controllers
         public async Task<IActionResult> Post(IFormFile file)
         {
             if (file == null || file.Length == 0) return BadRequest("No file uploaded");
+
+            var username = User?.Identity?.Name;
+            var key = $"{_cacheService.GetKeyPrefix("user")}{username?.ToLower()}";
+            if (string.IsNullOrWhiteSpace(key)) return BadRequest($"No authorized environment for user");
+            var config = await _cacheService.GetStringAsync(key);
+            if (string.IsNullOrWhiteSpace(config)) return BadRequest($"No authorized environment for user");
+            var state = System.Text.Json.JsonSerializer.Deserialize<UserConfiguration>(config);
+            var environment = state?.Environment;
+            if (string.IsNullOrWhiteSpace(environment)) return BadRequest($"No authorized environment for user");
 
             if (!AllowableContentType.IsAllowable(file.ContentType)) return BadRequest($"{file.ContentType} not supported.");
 
@@ -78,13 +88,13 @@ namespace PhiDeidPortal.Ui.Controllers
                 if (String.IsNullOrWhiteSpace(uri)) { throw new Exception(); }
                 var response = await _blobService.SetBlobUserDefinedMetadataAsync(_containerName, blobName, new Dictionary<string, string>
                 {
-                    { "environment", _environment }
+                    { "environment", environment }
                 });
                 if (!response.IsSuccess) { return StatusCode(500, "Error updating storage account metadata."); }
             }
-            catch
+            catch (Exception ex)
             {
-                return StatusCode(500, "Error connecting to the storage account.");
+                return StatusCode(500, $"Error connecting to the storage account. Details: {ex.GetType().Name}: {ex.Message}");
             }
 
             try
@@ -93,7 +103,7 @@ namespace PhiDeidPortal.Ui.Controllers
                     id: Guid.NewGuid().ToString(),
                     Author: User.Identity?.Name ?? "",
                     AwaitingIndex: true,
-                    Environment: _environment,
+                    Environment: environment,
                     FileName: blobName,
                     JustificationText: "",
                     LastIndexed: DateTime.MinValue,
@@ -107,6 +117,7 @@ namespace PhiDeidPortal.Ui.Controllers
             }
             catch (Exception ex)
             {
+                await _blobService.DeleteDocumentAsync(_containerName, uri);
                 return BadRequest($"Error updating document database metadata.");
             }
 
@@ -169,7 +180,8 @@ namespace PhiDeidPortal.Ui.Controllers
 
         private async Task<ServiceResponse> DeleteFromSearchIndex(string documentUri)
         {
-            var searchDocument = _searchService.SearchAsync($"metadata_storage_path eq '{documentUri}'").Result.FirstOrDefault();
+            var safeUri = documentUri.Replace("'", "''");
+            var searchDocument = (await _searchService.SearchAsync($"metadata_storage_path eq '{safeUri}'")).FirstOrDefault();
             if (searchDocument is null) return new ServiceResponse() { IsSuccess = false, Message = "Document not found in the search index" };
             var searchKey = searchDocument.Document["id"]?.ToString();
             if (searchKey is null) return new ServiceResponse() { IsSuccess = false, Message = "Document key not found in the search index" };
@@ -290,7 +302,8 @@ namespace PhiDeidPortal.Ui.Controllers
 
         private async Task<string> ResetDocumentAsync(string uri)
         {
-            var searchDocument = _searchService.SearchAsync($"metadata_storage_path eq '{uri}'").Result.FirstOrDefault();
+            var safeUri = uri.Replace("'", "''");
+            var searchDocument = (await _searchService.SearchAsync($"metadata_storage_path eq '{safeUri}'")).FirstOrDefault();
             if (searchDocument is null) return "Reset document failed. Document not found in the search index.";
             var searchKey = searchDocument.Document["id"]?.ToString();
             if (searchKey is null) return "Reset document failed. Document key not found in the search index.";

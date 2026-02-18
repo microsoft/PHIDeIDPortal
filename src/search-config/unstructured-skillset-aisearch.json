@@ -59,16 +59,29 @@
       "context": "/document",
       "uri": "{PLACEHOLDER}",
       "httpMethod": "POST",
-      "timeout": "PT1M",
+      "timeout": "PT3M50S",
       "batchSize": 1000,
+      "degreeOfParallelism": 10,
       "inputs": [
         {
           "name": "text",
-          "source": "/document/mergeSkillOutput"
+          "source": "/document/mergeSkillOutput",
+          "inputs": []
+        },
+        {
+          "name": "maskingCharacter",
+          "source": "='**'",
+          "inputs": []
         },
         {
           "name": "environment",
-          "source": "/document/environment"
+          "source": "/document/environment",
+          "inputs": []
+        },
+        {
+          "name": "maxTokensPerParagraph",
+          "source": "=16000",
+          "inputs": []
         }
       ],
       "outputs": [

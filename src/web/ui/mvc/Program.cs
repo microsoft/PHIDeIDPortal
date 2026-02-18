@@ -10,6 +10,7 @@ using Microsoft.FeatureManagement;
 using PhiDeidPortal.Ui.Services;
 using System.Text.Json;
 using PhiDeidPortal.Ui.Hubs;
+using Microsoft.Extensions.Caching.Cosmos;
 
 namespace PhiDeidPortal.Ui
 {
@@ -35,17 +36,13 @@ namespace PhiDeidPortal.Ui
                     options.PayloadSerializerOptions.WriteIndented = true;
                 });
 
-            builder.Services.AddFeatureManagement();
-
             builder.Services.Configure<CookiePolicyOptions>(options =>
             {
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.Unspecified;
-                // Handling SameSite cookie according to https://docs.microsoft.com/en-us/aspnet/core/security/samesite?view=aspnetcore-3.1
                 options.HandleSameSiteCookieCompatibility();
             });
 
-            // Sign-in users with the Microsoft identity platform
             builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
                 .AddMicrosoftIdentityWebApp(options =>
                 {
@@ -120,6 +117,19 @@ namespace PhiDeidPortal.Ui
                 return new CosmosService(cosmosClient, builder.Configuration);
             });
 
+            builder.Services.AddCosmosCache((CosmosCacheOptions cacheOptions) =>
+            {
+                cacheOptions.DatabaseName = builder.Configuration.GetSection("CosmosDb")["CacheProviderDatabaseId"];
+                cacheOptions.ContainerName = builder.Configuration.GetSection("CosmosDb")["CacheProviderContainerId"];
+                cacheOptions.CosmosClient = cosmosClient;
+                cacheOptions.CreateIfNotExists = true;
+            });
+
+            builder.Services.AddSingleton<ICacheService, CosmosCacheService>();
+
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddFeatureManagement().AddFeatureFilter<Filters.EnvironmentFeatureFilter>();
+
             builder.Services.AddRazorPages();
 
             var app = builder.Build();
@@ -127,7 +137,6 @@ namespace PhiDeidPortal.Ui
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
@@ -139,7 +148,7 @@ namespace PhiDeidPortal.Ui
 
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints => 
+            app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<CosmosDocuments>("/cosmosdocuments");
                 endpoints.MapControllers();

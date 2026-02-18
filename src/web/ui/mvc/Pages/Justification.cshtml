@@ -50,11 +50,13 @@
                     }
                 }
 
-                var redactedContent = result.Document["redactedContent"];
-                redactedContent = (redactedContent is null) ? "Error reading redacted content." : (result.Document["redactedContent"].ToString()) is var rc && rc.Length > 512 ? $"{rc[..511]}..." : rc;
+                var redactedContentValue = result.Document.ContainsKey("redactedContent") ? result.Document["redactedContent"]?.ToString() : null;
+                var redactedContent = string.IsNullOrEmpty(redactedContentValue)
+                    ? "Error reading redacted content."
+                    : (redactedContentValue.Length > 512 ? $"{redactedContentValue[..511]}..." : redactedContentValue);
 
                 <tr class="@(i % 2 == 0 ? "row-even" : "row-odd")">
-                    <td class="tdtop">@result.Document["environment"]</td>
+                    <td class="tdtop">@(result.Document.ContainsKey("environment") ? result.Document["environment"] : "N/A")</td>
                     <td class="tdtop">@result.Document["metadata_storage_name"]</td>
                     <td class="tdtop">@result.Document["author"].ToString().Split('@')[0]</td>
                     <td class="date-column tdtop">
