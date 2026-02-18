@@ -15,8 +15,14 @@ namespace PhiDeidPortal.Ui.Services
 
         public bool HasElevatedRights(ClaimsPrincipal user)
         {
-            var userGroupClaim = GetUserGroupClaims(user).Where(c => c == _configuration.GetValue<string>("GroupClaimAdminId"));
-            return userGroupClaim != null;
+            var adminGroupId = _configuration.GetValue<string>("GroupClaimAdminId");
+            if (string.IsNullOrWhiteSpace(adminGroupId))
+            {
+                return false;
+            }
+
+            var userGroupClaims = GetUserGroupClaims(user);
+            return userGroupClaims.Any(c => c == adminGroupId);
         }
 
         public List<EnvironmentGroupClaim> GetAuthorizedEnvironments(ClaimsPrincipal user)
