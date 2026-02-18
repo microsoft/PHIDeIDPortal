@@ -94,7 +94,8 @@ namespace PhiDeidPortal.Ui.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error connecting to the storage account. Details: {ex.GetType().Name}: {ex.Message}");
+                Console.Error.WriteLine(ex);
+                return StatusCode(500, "Error connecting to the storage account.");
             }
 
             try
