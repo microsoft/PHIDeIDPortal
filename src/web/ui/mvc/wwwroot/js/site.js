@@ -146,14 +146,11 @@ phideid.ui = (function () {
 
         sanitizePath(path) {
             if (!path) return null;
-            // Ensure path is a string and trim whitespace
+
             path = String(path).trim();
             if (path.length === 0) return null;
-
-            // Disallow protocol-relative URLs
             if (path.startsWith("//")) return null;
 
-            // Disallow dangerous schemes such as javascript:, data:, vbscript:
             var lower = path.toLowerCase();
             if (lower.startsWith("javascript:") ||
                 lower.startsWith("data:") ||
@@ -161,11 +158,8 @@ phideid.ui = (function () {
                 return null;
             }
 
-            // Disallow absolute URLs with a scheme like http:, https:, etc.
             var schemeMatch = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(path);
             if (schemeMatch) return null;
-
-            // Allow same-origin absolute paths or relative paths
             return path;
         },
 
