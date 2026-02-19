@@ -20,14 +20,14 @@ namespace PhiDeidPortal.Ui.Pages
         public bool IsDeleteFeatureAvailable { get; private set; }
         public List<MetadataRecord> Results { get; private set; } = [];
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
             if (User.Identity?.Name is null) return;
             var viewFilter = Request.Query["v"].ToString().ToLower() == "me";
             var searchString = Request.Query["q"].ToString();
             var isElevated = _authService.HasElevatedRights(User);
             FailedRecords = _searchService.GetFailedIndexerRecordsAsync(String.Empty).Result;
-            IsDeleteFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Delete);
+            IsDeleteFeatureAvailable = await _featureService.IsFeatureEnabledAsync(Feature.Delete);
             Results = (isElevated && !viewFilter) ? _cosmosService.GetAllMetadataRecords(searchString) : _cosmosService.GetAllMetadataRecordsByAuthor(User.Identity.Name, searchString);
         }
     }

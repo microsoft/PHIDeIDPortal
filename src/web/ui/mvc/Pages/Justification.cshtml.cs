@@ -22,7 +22,7 @@ namespace PhiDeidPortal.Ui.Pages
         public bool IsDeleteFeatureAvailable { get; private set; }
         public bool IsDownloadFeatureAvailable { get; private set; }
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
             if (User.Identity?.Name is null) return;
             var viewFilter = Request.Query["v"].ToString().ToLower() == "me";
@@ -32,8 +32,8 @@ namespace PhiDeidPortal.Ui.Pages
 
             Results = (isElevated && !viewFilter) ? _searchService.SearchAsync(searchFilter, searchString).Result : _searchService.SearchByAuthorAsync(User.Identity.Name, searchFilter, searchString).Result;
 
-            IsDeleteFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Delete);
-            IsDownloadFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Download);
+            IsDeleteFeatureAvailable = await _featureService.IsFeatureEnabledAsync(Feature.Delete);
+            IsDownloadFeatureAvailable = await _featureService.IsFeatureEnabledAsync(Feature.Download);
         }
         
         public async Task<(string, bool)> GetMetadataRecord(string uri)
