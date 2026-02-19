@@ -173,7 +173,8 @@ phideid.ui = (function () {
             var params = parts.length > 0 ? "?" + parts.join("&") : "";
             var safePath = phideid.ui.sanitizePath(path);
             var destination = safePath ? safePath : location.pathname;
-            location.href = destination + params;
+            var safeUrl = new URL(destination + params, window.location.origin);
+            location.assign(safeUrl.pathname + safeUrl.search);
         },
 
         toggleViewAll() {
