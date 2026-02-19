@@ -17,7 +17,7 @@ namespace PhiDeidPortal.Ui.ViewComponents
 
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            if (!_featureService.IsFeatureEnabled(Feature.Upload))
+            if (!await _featureService.IsFeatureEnabledAsync(Feature.Upload))
                 return View(new UploadViewModel() { IsFeatureAvailable = false });
 
             var configuration = _configuration.GetSection("Kestrel");

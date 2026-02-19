@@ -40,7 +40,7 @@ namespace PhiDeidPortal.Ui.ViewComponents
 
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            if (!_featureService.IsFeatureEnabled(Feature.TabbedNavigation))
+            if (!await _featureService.IsFeatureEnabledAsync(Feature.TabbedNavigation))
                 return View(new TabbedNavigationViewModel() { IsFeatureAvailable = false });
 
             if (User.Identity?.Name is null) 
@@ -53,14 +53,14 @@ namespace PhiDeidPortal.Ui.ViewComponents
                 StatusSummary = GetSummary()                
             };
 
-            viewModel.PageFeatures.Add(Feature.AllDocumentsView, _featureService.IsFeatureEnabled(Feature.AllDocumentsView));
-            viewModel.PageFeatures.Add(Feature.UnprocessedView, _featureService.IsFeatureEnabled(Feature.UnprocessedView));
-            viewModel.PageFeatures.Add(Feature.JustificationView, _featureService.IsFeatureEnabled(Feature.JustificationView));
-            viewModel.PageFeatures.Add(Feature.ManualReviewView, _featureService.IsFeatureEnabled(Feature.ManualReviewView));
-            viewModel.PageFeatures.Add(Feature.ApprovedView, _featureService.IsFeatureEnabled(Feature.ApprovedView));
-            viewModel.PageFeatures.Add(Feature.DeniedView, _featureService.IsFeatureEnabled(Feature.DeniedView));
-            viewModel.PageFeatures.Add(Feature.Upload, _featureService.IsFeatureEnabled(Feature.Upload));
-            viewModel.PageFeatures.Add(Feature.Search, _featureService.IsFeatureEnabled(Feature.Search));
+            viewModel.PageFeatures.Add(Feature.AllDocumentsView, await _featureService.IsFeatureEnabledAsync(Feature.AllDocumentsView));
+            viewModel.PageFeatures.Add(Feature.UnprocessedView, await _featureService.IsFeatureEnabledAsync(Feature.UnprocessedView));
+            viewModel.PageFeatures.Add(Feature.JustificationView, await _featureService.IsFeatureEnabledAsync(Feature.JustificationView));
+            viewModel.PageFeatures.Add(Feature.ManualReviewView, await _featureService.IsFeatureEnabledAsync(Feature.ManualReviewView));
+            viewModel.PageFeatures.Add(Feature.ApprovedView, await _featureService.IsFeatureEnabledAsync(Feature.ApprovedView));
+            viewModel.PageFeatures.Add(Feature.DeniedView, await _featureService.IsFeatureEnabledAsync(Feature.DeniedView));
+            viewModel.PageFeatures.Add(Feature.Upload, await _featureService.IsFeatureEnabledAsync(Feature.Upload));
+            viewModel.PageFeatures.Add(Feature.Search, await _featureService.IsFeatureEnabledAsync(Feature.Search));
 
             return View(viewModel);
         }

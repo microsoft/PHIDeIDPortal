@@ -20,7 +20,7 @@ namespace PhiDeidPortal.Ui.Pages
         public bool IsDownloadFeatureAvailable { get; private set; }
         public bool IsDeleteFeatureAvailable { get; private set; }
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
             if (User.Identity?.Name is null) return;
             var viewFilter = Request.Query["v"].ToString().ToLower() == "me";
@@ -29,8 +29,8 @@ namespace PhiDeidPortal.Ui.Pages
             var searchFilter = $"status eq 4";
 
             Results = (isElevated && !viewFilter) ? _searchService.SearchAsync(searchFilter, searchString).Result : _searchService.SearchByAuthorAsync(User.Identity.Name, searchFilter, searchString).Result;
-            IsDownloadFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Download);
-            IsDeleteFeatureAvailable = _featureService.IsFeatureEnabled(Feature.Delete);
+            IsDownloadFeatureAvailable = await _featureService.IsFeatureEnabledAsync(Feature.Download);
+            IsDeleteFeatureAvailable = await _featureService.IsFeatureEnabledAsync(Feature.Delete);
         }
     }
 }

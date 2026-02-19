@@ -2,6 +2,6 @@
 {
     public interface IFeatureService
     {
-        bool IsFeatureEnabled(string featureName);
+        Task<bool> IsFeatureEnabledAsync(string featureName);
     }
 }

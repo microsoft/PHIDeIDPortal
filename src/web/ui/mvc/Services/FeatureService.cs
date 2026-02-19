@@ -11,9 +11,9 @@ namespace PhiDeidPortal.Ui.Services
             _featureManager = featureManager;
         }
 
-        public bool IsFeatureEnabled(string featureName)
+        public async Task<bool> IsFeatureEnabledAsync(string featureName)
         {
-            return _featureManager.IsEnabledAsync(featureName).GetAwaiter().GetResult();
+            return await _featureManager.IsEnabledAsync(featureName);
         }
     }
 }
