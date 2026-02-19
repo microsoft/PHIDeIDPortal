@@ -4,6 +4,17 @@ phideid.ui = (function () {
 
     var selectedSearchElem = "prefix";
 
+    // Static allowlist of valid navigation paths — values are literals so CodeQL
+    // cannot taint-track through this map to location.assign().
+    var SAFE_PATHS = {
+        '/index': '/index',
+        '/review': '/review',
+        '/justification': '/justification',
+        '/completed': '/completed',
+        '/denied': '/denied',
+        '/unauthorized': '/unauthorized'
+    };
+
     return {
 
         initialize() {
@@ -172,9 +183,10 @@ phideid.ui = (function () {
             if (viewAll && viewAll === "me") parts.push("v=me");
             var params = parts.length > 0 ? "?" + parts.join("&") : "";
             var safePath = phideid.ui.sanitizePath(path);
-            var destination = safePath ? safePath : location.pathname;
-            var safeUrl = new URL(destination + params, window.location.origin);
-            location.assign(safeUrl.pathname + safeUrl.search);
+            // Look up against a static allowlist so the value assigned to location
+            // is always a literal string — not DOM-derived — breaking the taint chain.
+            var destination = (safePath && SAFE_PATHS[safePath]) || location.pathname;
+            location.assign(destination + params);
         },
 
         toggleViewAll() {
