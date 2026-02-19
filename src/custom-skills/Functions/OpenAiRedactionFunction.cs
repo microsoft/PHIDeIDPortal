@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.Tokenizers;
 using Microsoft.SemanticKernel;
@@ -17,10 +16,12 @@ namespace PhiDeidPortal.CustomFunctions.Functions
     public class OpenAIRedactionFunction
     {
         private readonly ILogger<OpenAIRedactionFunction> _logger;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public OpenAIRedactionFunction(ILogger<OpenAIRedactionFunction> logger)
+        public OpenAIRedactionFunction(ILogger<OpenAIRedactionFunction> logger, IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
 
         [Function("OpenAiRedactionFunction")]
@@ -48,7 +49,7 @@ namespace PhiDeidPortal.CustomFunctions.Functions
                 _logger.LogInformation($"Deployment Name: {Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiDeploymentName)}");
                 _logger.LogInformation($"End Point: {Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiEndpoint)}");
 
-                var client = new HttpClient() { Timeout = TimeSpan.FromMinutes(5) };
+                var client = _httpClientFactory.CreateClient("OpenAI");
 
                 kernel = Kernel.CreateBuilder()
                 .AddAzureOpenAIChatCompletion(

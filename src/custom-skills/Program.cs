@@ -16,6 +16,7 @@ var host = new HostBuilder()
     .ConfigureServices(services => {
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
+        services.AddHttpClient("OpenAI", client => { client.Timeout = TimeSpan.FromMinutes(5); });
     })
     .Build();
 
