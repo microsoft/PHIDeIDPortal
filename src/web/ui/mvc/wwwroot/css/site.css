@@ -309,4 +309,44 @@ td .tagCloudElemPlaceholder {
     letter-spacing: 1px;
     text-align: right;
     font-weight: 500;
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+}
+
+.environment-dropdown-toggle,
+.environment-single,
+.environment-single:hover,
+.environment-single:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #fff;
+    padding: 5px 15px;
+    margin: 0;
+    line-height: 1;
+    border-radius: 4px;
+}
+
+.environment-dropdown-toggle:hover,
+.environment-dropdown-toggle:focus {
+    background-color: rgba(0, 0, 0, 0.2);
+    color: #fff;
+}
+
+.environment-dropdown {
+    min-width: 150px;
+}
+
+.environment-dropdown li {
+    margin: 5px;
+}
+
+.environment-option {
+    cursor: pointer;
+}
+
+.environment-option:hover {
+    background-color: rgba(13, 110, 253, 0.10);
 }

@@ -1,10 +1,6 @@
-﻿using Azure.Storage.Blobs;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Cosmos;
+﻿using Microsoft.Azure.Cosmos;
 using PhiDeidPortal.Ui.Entities;
-using System;
 using System.Net;
-using System.Reflection.Metadata.Ecma335;
 
 namespace PhiDeidPortal.Ui.Services
 {
@@ -63,35 +59,38 @@ namespace PhiDeidPortal.Ui.Services
             return GetMetadataRecords(searchString).Where(d => d.Status == status && (d.Author == author || d.Author == "N/A")).ToList();
         }
 
-        private IOrderedQueryable<MetadataRecord> GetMetadataRecords(string? searchString = null)
+        private IQueryable<MetadataRecord> GetMetadataRecords(string? searchString = null)
         {
             var result = _cosmosClient
             .GetDatabase(_cosmosDbName)
             .GetContainer(_cosmosContainerName)
             .GetItemLinqQueryable<MetadataRecord>(true);
 
-            return (IOrderedQueryable<MetadataRecord>)(string.IsNullOrWhiteSpace(searchString) ? result : result.Where(y => y.Environment.Contains(searchString, StringComparison.CurrentCultureIgnoreCase) ||
+            if (string.IsNullOrWhiteSpace(searchString)) return result;
+
+            return result.Where(y => (y.Environment ?? "").Contains(searchString, StringComparison.CurrentCultureIgnoreCase) ||
                         y.Uri.Contains(searchString, StringComparison.CurrentCultureIgnoreCase) ||
-                        y.FileName.ToLower().Contains(searchString.ToLower()) ||
-                        y.OrganizationalMetadata.Any(om => om.ToLower().Contains(searchString.ToLower()))));
+                        y.FileName.Contains(searchString, StringComparison.CurrentCultureIgnoreCase) ||
+                        y.OrganizationalMetadata.Any(om => om.Contains(searchString, StringComparison.CurrentCultureIgnoreCase)));
         }
 
         public StatusSummary GetSummaryByAuthor(string username)
         {
-            return GetSummaryAsync($"SELECT * FROM c where c.Author = '{username}'").Result;
+            var query = new QueryDefinition("SELECT * FROM c WHERE c.Author = @username").WithParameter("@username", username);
+            return GetSummaryAsync(query).Result;
         }
 
         public StatusSummary GetSummary()
         {
-            return GetSummaryAsync("SELECT * FROM c").Result;
+            return GetSummaryAsync(new QueryDefinition("SELECT * FROM c")).Result;
         }
 
-        private async Task<StatusSummary> GetSummaryAsync(string query)
+        private async Task<StatusSummary> GetSummaryAsync(QueryDefinition queryDefinition)
         {
             var cosmosResult = _cosmosClient
                 .GetDatabase(_cosmosDbName)
                 .GetContainer(_cosmosContainerName)
-                .GetItemQueryIterator<dynamic>(query);
+                .GetItemQueryIterator<dynamic>(queryDefinition);
 
             var summaryResponse = new List<dynamic>();
             while (cosmosResult.HasMoreResults)

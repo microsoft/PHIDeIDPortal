@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.Tokenizers;
 using Microsoft.SemanticKernel;
@@ -46,12 +47,15 @@ namespace PhiDeidPortal.CustomFunctions.Functions
             {
                 _logger.LogInformation($"Deployment Name: {Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiDeploymentName)}");
                 _logger.LogInformation($"End Point: {Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiEndpoint)}");
-     
+
+                var client = new HttpClient() { Timeout = TimeSpan.FromMinutes(5) };
+
                 kernel = Kernel.CreateBuilder()
                 .AddAzureOpenAIChatCompletion(
                     deploymentName: Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiDeploymentName),
                     endpoint: Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiEndpoint),
-                    apiKey: Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiApiKey)
+                    apiKey: Environment.GetEnvironmentVariable(EnvironmentVariables.OpenAiApiKey),
+                    httpClient: client
                 )
                 .Build();
             }
@@ -112,7 +116,8 @@ namespace PhiDeidPortal.CustomFunctions.Functions
                     {
                         ResponseFormat = chatResponseFormat,
                         Temperature = 0.0,
-                        ChatSystemPrompt = systemPrompt
+                        ChatSystemPrompt = systemPrompt,
+                        MaxTokens = 16384
                     }
                 );
 
@@ -139,7 +144,8 @@ namespace PhiDeidPortal.CustomFunctions.Functions
                                 MaxTokensPerParagraph = record.Data.MaxTokensPerParagraph,
                                 TokenOverlapSize = record.Data.TokenOverlapSize,
                                 ParagraphCount = "0",
-                                RedactedEntities = "[]"
+                                RedactedEntities = "[]",
+                                RedactedEntitiesCount = "0"
                             },
                             Warnings = new List<OpenAiRedactionOutputRecord.OutputRecordMessage>
                             {
@@ -158,6 +164,8 @@ namespace PhiDeidPortal.CustomFunctions.Functions
                     var overlapSize = int.Parse(record.Data.TokenOverlapSize);
                     var paragraphs = SplitPlainTextParagraphs(record.Data.Text, maxTokens, overlapSize);
 
+                    _logger.LogInformation($"Paragraph count: {paragraphs.Count}");
+
                     var invocations = await Task.WhenAll(paragraphs.Select(paragraph =>
                         kernel.InvokeAsync(redact, new KernelArguments { { "text", paragraph } })
                     ));
@@ -168,6 +176,9 @@ namespace PhiDeidPortal.CustomFunctions.Functions
                         var invocation = invocations[i];
                         var value = invocation.GetValue<string>();
                         if (string.IsNullOrWhiteSpace(value)) continue;
+
+                        ///////////////////// DEBUG LOGGING /////////////////////
+                        _logger.LogInformation($"Output token count : {CountTokens(value)}");
 
                         var result = JsonConvert.DeserializeObject<PiiDetectionResult>(value);
                         result.PiiDetails.ForEach(x => x.Paragraph = (i + 1).ToString());
@@ -192,6 +203,7 @@ namespace PhiDeidPortal.CustomFunctions.Functions
                             ? ApplyRedaction(record.Data.Text, piiDetectionResult.PiiDetails, record.Data.MaskingCharacter)
                             : record.Data.Text;
                     outputRecord.Data.RedactedEntities = JsonConvert.SerializeObject(piiDetectionResult.PiiDetails);
+                    outputRecord.Data.RedactedEntitiesCount = piiDetectionResult.PiiDetails.Count.ToString();
                     outputRecord.Errors = new List<OpenAiRedactionOutputRecord.OutputRecordMessage>();
                     _logger.LogInformation($"Errors {outputRecord.Errors}");
                     outputRecord.Warnings = new List<OpenAiRedactionOutputRecord.OutputRecordMessage>();

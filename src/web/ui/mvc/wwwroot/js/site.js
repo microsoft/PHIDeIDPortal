@@ -4,6 +4,17 @@ phideid.ui = (function () {
 
     var selectedSearchElem = "prefix";
 
+    // Static allowlist of valid navigation paths — values are literals so CodeQL
+    // cannot taint-track through this map to location.assign().
+    var SAFE_PATHS = {
+        '/index': '/index',
+        '/review': '/review',
+        '/justification': '/justification',
+        '/completed': '/completed',
+        '/denied': '/denied',
+        '/unauthorized': '/unauthorized'
+    };
+
     return {
 
         initialize() {
@@ -27,6 +38,7 @@ phideid.ui = (function () {
 
             phideid.ui.setSearchBoxValue();
             phideid.ui.setViewAllIcon();
+            phideid.ui.loadSelectedEnvironment();
         },
 
         showPIIHover(elem, e) {
@@ -114,7 +126,6 @@ phideid.ui = (function () {
                 }
 
             });
-
         },
 
         showLoadingIndicator() {
@@ -144,15 +155,38 @@ phideid.ui = (function () {
             $(".search-row input[type='text']").val(value);
         },
 
+        sanitizePath(path) {
+            if (!path) return null;
+
+            path = String(path).trim();
+            if (path.length === 0) return null;
+            if (path.startsWith("//")) return null;
+
+            var lower = path.toLowerCase();
+            if (lower.startsWith("javascript:") ||
+                lower.startsWith("data:") ||
+                lower.startsWith("vbscript:")) {
+                return null;
+            }
+
+            var schemeMatch = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(path);
+            if (schemeMatch) return null;
+            return path;
+        },
+
         search(path) {
             var searchValue = $(".search-row input[type='text']").val();
             sessionStorage.setItem("searchValue", searchValue);
-            var query = (searchValue && searchValue.length > 0) ? "q=" + searchValue : "";
+            var parts = [];
+            if (searchValue && searchValue.length > 0) parts.push("q=" + encodeURIComponent(searchValue));
             var viewAll = sessionStorage.getItem("viewMe");
-            var view = (viewAll && viewAll === "me") ? "&v=" + sessionStorage.getItem("viewMe") : "";
-            var params = (query || view) ? "?" : "";
-            var destination = (path) ? path : location.pathname;
-            location.href = destination + params + query + view;
+            if (viewAll && viewAll === "me") parts.push("v=me");
+            var params = parts.length > 0 ? "?" + parts.join("&") : "";
+            var safePath = phideid.ui.sanitizePath(path);
+            // Look up against a static allowlist so the value assigned to location
+            // is always a literal string — not DOM-derived — breaking the taint chain.
+            var destination = (safePath && SAFE_PATHS[safePath]) || location.pathname;
+            location.assign(destination + params);
         },
 
         toggleViewAll() {
@@ -181,11 +215,11 @@ phideid.ui = (function () {
 
         toastReload() {
             $("#toastreload").attr('href', '#');
-            $("#toastreload").html("Reloading in 5 sec ...");
+            $("#toastreload").html("Reloading in 3 sec ...");
             var count = 0;
             var interval = setInterval(function () {
-                $("#toastreload").html(`Reloading in ${(4 - count++)} sec ...`);
-                if (count >= 5) {
+                $("#toastreload").html(`Reloading in ${(2 - count++)} sec ...`);
+                if (count >= 3) {
                     clearInterval(interval);
                     location.reload();
                 }
@@ -293,7 +327,6 @@ phideid.ui = (function () {
 
         reindex() {
             phideid.ui.showLoadingIndicator();
-
             $.ajax({
                 url: '/api/documents/reindex',
                 type: 'POST',
@@ -315,6 +348,45 @@ phideid.ui = (function () {
 
         downloadFile(filename) {
             window.open("/api/documents/" + filename, "_blank");
+        },
+
+        setSelectedEnvironment(name) {
+            phideid.ui.showLoadingIndicator();
+            $.ajax({
+                url: '/api/user/setconfig',
+                type: 'POST',
+                data: JSON.stringify({ environment: name }),
+                contentType: 'application/json',
+                success: function (data) {
+                    $("#current-environment").text(name);
+                    $("#uploadDialog .modal-title").text(`Upload document to ${name}`)
+                    phideid.ui.showToast('User settings updated.', false, true);
+                    phideid.ui.toastReload();
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    phideid.ui.showToast('An error occurred while updating user settings.', true, false);
+                    phideid.ui.hideLoadingIndicator();
+                }
+            });
+        },
+
+        loadSelectedEnvironment() {
+            phideid.ui.showLoadingIndicator();
+            $.ajax({
+                url: '/api/user/getconfig',
+                type: 'GET',
+                success: function (data) {
+                    if (data && data.environment) {
+                        $("#current-environment").text(data.environment);
+                        $("#uploadDialog .modal-title").text(`Upload document to ${data.environment}`);
+                    }
+                    phideid.ui.hideLoadingIndicator();
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    phideid.ui.showToast('An error occurred loading user settings.', true, false);
+                    phideid.ui.hideLoadingIndicator();
+                }
+            });
         }
     };
 
@@ -392,5 +464,14 @@ $(document).ready(function () {
         $input.val("");
         sessionStorage.removeItem("searchValue");
         phideid.ui.search();
+    });
+
+    // Environment selection logic
+    $(document).on("click", ".environment-option", function () {
+        var name = $(this).attr("data-environment");
+        if (!name) return;
+        phideid.ui.setSelectedEnvironment(name); 
+        var dropdown = bootstrap.Dropdown.getInstance($("#environmentDropdown")[0]);
+        if (dropdown) { dropdown.hide(); }
     });
 });

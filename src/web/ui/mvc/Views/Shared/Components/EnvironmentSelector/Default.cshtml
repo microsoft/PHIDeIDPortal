@@ -1,0 +1,24 @@
+@model PhiDeidPortal.Ui.Entities.EnvironmentSelectorViewModel
+
+<div class="environment-header">
+    <i class="bi bi-geo-alt-fill"></i>ENVIRONMENT - 
+    @if (Model.AuthorizedEnvironments.Count() == 0)
+    {
+        <span class="environment-single">
+            <span id="current-environment">@Model.CurrentEnvironment</span>
+        </span>
+    }
+    else
+    {
+        <button class="btn btn-sm environment-dropdown-toggle" type="button" id="environmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <span id="current-environment">@Model.CurrentEnvironment</span>&nbsp;
+            <i class="bi bi-chevron-down"></i>
+        </button>
+        <ul class="dropdown-menu environment-dropdown" aria-labelledby="environmentDropdown">
+            @foreach (var env in Model.AuthorizedEnvironments)
+            {
+                <li><a class="dropdown-item environment-option" data-environment="@env.EnvironmentName">@env.EnvironmentName</a></li>
+            }
+        </ul>
+    }
+</div>

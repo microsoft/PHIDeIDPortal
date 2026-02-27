@@ -65,8 +65,8 @@ namespace PhiDeidPortal.Ui.Services
             string blobName = $"{Path.GetFileName(uri)}";
             var docBlobClient = GetBlobClient(container, blobName);
 
-            var exists = docBlobClient.Exists();
-            if (!exists) { return new ServiceResponse() { IsSuccess = false, Code = HttpStatusCode.NotFound, Message = "Document not found in the storage account" }; } 
+            var exists = await docBlobClient.ExistsAsync();
+            if (!exists.Value) { return new ServiceResponse() { IsSuccess = false, Code = HttpStatusCode.NotFound, Message = "Document not found in the storage account" }; }
 
             var delete = await docBlobClient.DeleteIfExistsAsync();
             return new ServiceResponse() { IsSuccess = delete.Value, Code = delete.Value == true ? HttpStatusCode.OK : HttpStatusCode.BadRequest, Message = delete.Value == true ? "Document deleted from the storage account" : "Document not deleted from storage account - BadRequest" };

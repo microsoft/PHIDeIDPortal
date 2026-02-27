@@ -7,7 +7,8 @@ namespace PhiDeidPortal.CustomFunctions.Entities
                 public string Text { get; set; } = "";
                 public string RedactedText { get; set; } = "";
                 public string RedactedEntities { get; set; } = "";
-            }
+                public string RedactedEntitiesCount { get; set; } = "0";
+        }
 
             public class OutputRecordMessage
             {

@@ -55,7 +55,8 @@ namespace PhiDeidPortal.CustomFunctions.Functions
                         {
                             Text = record.Data.Text,
                             RedactedText = record.Data.Text,
-                            RedactedEntities = "[]"
+                            RedactedEntities = "[]",
+                            RedactedEntitiesCount = "0"
                         },
                         Warnings = new List<RegexRedactionOutputRecord.OutputRecordMessage>
                         {
@@ -88,7 +89,8 @@ namespace PhiDeidPortal.CustomFunctions.Functions
                                        //words[0],
                                         m => { redactedWords.Add(m.Value); return record.Data.MaskingCharacter; },
                                         RegexOptions.IgnoreCase),
-                        RedactedEntities = string.Join(",", redactedWords)
+                        RedactedEntities = string.Join(",", redactedWords),
+                        RedactedEntitiesCount = redactedWords.Count.ToString()
                     };
 
                 }
