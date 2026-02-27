@@ -92,6 +92,10 @@
         {
           "name": "redactedEntities",
           "targetName": "redactedEntitiesOutput"
+        },
+        {
+          "name": "redactedEntitiesCount",
+          "targetName": "redactedEntitiesCountOutput"
         }
       ]
     },
@@ -103,7 +107,7 @@
       "inputs": [
         {
           "name": "condition",
-          "source": "=$(/document/content) == $(/document/redactedTextOutput)"
+          "source": "=$(/document/redactedEntitiesCountOutput) == '0'"
         },
         {
           "name": "whenTrue",

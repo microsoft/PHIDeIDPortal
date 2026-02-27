@@ -144,7 +144,8 @@ namespace PhiDeidPortal.CustomFunctions.Functions
                                 MaxTokensPerParagraph = record.Data.MaxTokensPerParagraph,
                                 TokenOverlapSize = record.Data.TokenOverlapSize,
                                 ParagraphCount = "0",
-                                RedactedEntities = "[]"
+                                RedactedEntities = "[]",
+                                RedactedEntitiesCount = "0"
                             },
                             Warnings = new List<OpenAiRedactionOutputRecord.OutputRecordMessage>
                             {
@@ -202,6 +203,7 @@ namespace PhiDeidPortal.CustomFunctions.Functions
                             ? ApplyRedaction(record.Data.Text, piiDetectionResult.PiiDetails, record.Data.MaskingCharacter)
                             : record.Data.Text;
                     outputRecord.Data.RedactedEntities = JsonConvert.SerializeObject(piiDetectionResult.PiiDetails);
+                    outputRecord.Data.RedactedEntitiesCount = piiDetectionResult.PiiDetails.Count.ToString();
                     outputRecord.Errors = new List<OpenAiRedactionOutputRecord.OutputRecordMessage>();
                     _logger.LogInformation($"Errors {outputRecord.Errors}");
                     outputRecord.Warnings = new List<OpenAiRedactionOutputRecord.OutputRecordMessage>();
